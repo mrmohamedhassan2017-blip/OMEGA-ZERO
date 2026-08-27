@@ -26,8 +26,8 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         evidence_question = by_statement.get("Which evidence schema is sufficient for auditability?")
         if evidence_question:
             store.update_node(evidence_question["id"], confidence=0.75, status="testing", evidence=[{
-                "source": "audit_events schema + mutation lifecycle tests", "observed_at": "2026-08-27",
-                "method": "append-only-atomic-mutation-audit", "reliability": 0.85,
+                "source": "audit_events + evaluations schema and lifecycle tests", "observed_at": "2026-08-27",
+                "method": "append-only-atomic-mutation-and-evidence-fingerprint-audit", "reliability": 0.88,
                 "verification_status": "reproduced", "note": "Audit begins at enablement; external provenance sufficiency remains unproven."}])
         ranking = by_statement.get("BREAK IT fragility ranking corresponds to useful attack priority")
         if ranking:
@@ -63,8 +63,8 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "semantics": store.add_node(pid, "constraint", "Every edge type must have one documented direction and meaning", 0.75),
         "ranking": store.add_node(pid, "assumption", "BREAK IT fragility ranking corresponds to useful attack priority", 0.2),
         "evidence": store.add_node(pid, "unknown", "Which evidence schema is sufficient for auditability?", 0.75, [{
-            "source": "audit_events schema + mutation lifecycle tests", "observed_at": "2026-08-27",
-            "method": "append-only-atomic-mutation-audit", "reliability": 0.85, "verification_status": "reproduced",
+            "source": "audit_events + evaluations schema and lifecycle tests", "observed_at": "2026-08-27",
+            "method": "append-only-atomic-mutation-and-evidence-fingerprint-audit", "reliability": 0.88, "verification_status": "reproduced",
             "note": "Audit begins at enablement; external provenance sufficiency remains unproven."}]),
         "tests": store.add_node(pid, "fact", "Core unit tests pass on the current implementation", 0.9,
                                 [{"source": "python -m unittest discover -s tests -v", "observed_at": "2026-08-27"}]),
