@@ -91,3 +91,23 @@ The earlier implementation stored supports in the opposite direction. Schema mig
 **Status:** Accepted — 2026-08-27
 
 Maintain a labelled end-to-end graph that checks WHY prerequisites/support/challenges, BREAK IT bottleneck selection, PROVE IT falsifiability and controls, WHAT IF propagation, and contract-version disclosure. Passing this benchmark proves conformance to the documented contract, not superiority of the contract on real decisions.
+
+## ADR-015 — Disclosed scoring profiles and sensitivity gate
+
+**Status:** Accepted — 2026-08-27
+
+Move BREAK IT weights into an immutable validated scoring profile and return the active profile with every result. Test the expected top priority on separately stored product, incident, and science graphs under balanced, confidence-heavy, dependency-heavy, and evidence-heavy profiles.
+
+Robustness across these profiles reduces weight sensitivity risk but does not replace independently authored labels.
+
+## ADR-016 — Core-candidate and V1 are different claims
+
+**Status:** Accepted — 2026-08-27
+
+`stability-audit` may declare an internal Core candidate only when every executable stability gate passes. It must keep `ready_for_v1` false while external outcome evidence or independent ranking labels are missing. This prevents self-authored tests from certifying the system's real-world usefulness.
+
+## ADR-017 — Local concurrent-write policy
+
+**Status:** Accepted — 2026-08-27
+
+Use SQLite WAL mode and a 10-second busy timeout. The stability gate runs four independent Python writer processes and verifies exact problem/node counts plus database integrity. This supports local concurrent writers; it is not a distributed database guarantee.

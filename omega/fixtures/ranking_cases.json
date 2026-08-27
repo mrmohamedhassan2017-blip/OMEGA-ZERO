@@ -1,0 +1,49 @@
+[
+  {
+    "name": "product-demand-bottleneck",
+    "domain": "product",
+    "expected_first": "demand",
+    "nodes": [
+      {"id": "launch", "type": "assumption", "statement": "The launch succeeds", "confidence": 0.60},
+      {"id": "pricing", "type": "assumption", "statement": "The pricing model succeeds", "confidence": 0.55},
+      {"id": "demand", "type": "unknown", "statement": "Demand reaches the viable threshold", "confidence": 0.10},
+      {"id": "competition", "type": "assumption", "statement": "Competition remains stable", "confidence": 0.45}
+    ],
+    "edges": [
+      {"source_id": "launch", "target_id": "demand", "type": "depends_on"},
+      {"source_id": "pricing", "target_id": "demand", "type": "depends_on"}
+    ]
+  },
+  {
+    "name": "incident-root-cause-bottleneck",
+    "domain": "incident",
+    "expected_first": "root_cause",
+    "nodes": [
+      {"id": "recovery", "type": "assumption", "statement": "Recovery plan fixes the incident", "confidence": 0.55},
+      {"id": "rollback", "type": "constraint", "statement": "Rollback preserves customer data", "confidence": 0.70},
+      {"id": "monitoring", "type": "assumption", "statement": "Monitoring detects recurrence", "confidence": 0.60},
+      {"id": "root_cause", "type": "unknown", "statement": "The actual root cause is identified", "confidence": 0.15}
+    ],
+    "edges": [
+      {"source_id": "recovery", "target_id": "root_cause", "type": "depends_on"},
+      {"source_id": "rollback", "target_id": "root_cause", "type": "depends_on"},
+      {"source_id": "monitoring", "target_id": "root_cause", "type": "depends_on"}
+    ]
+  },
+  {
+    "name": "science-contamination-bottleneck",
+    "domain": "science",
+    "expected_first": "contamination",
+    "nodes": [
+      {"id": "conclusion", "type": "assumption", "statement": "The observed effect is real", "confidence": 0.65},
+      {"id": "replication", "type": "assumption", "statement": "The effect will replicate", "confidence": 0.60},
+      {"id": "contamination", "type": "assumption", "statement": "Contamination did not cause the effect", "confidence": 0.20},
+      {"id": "calibration", "type": "unknown", "statement": "Calibration error is quantified", "confidence": 0.40}
+    ],
+    "edges": [
+      {"source_id": "conclusion", "target_id": "contamination", "type": "depends_on"},
+      {"source_id": "replication", "target_id": "contamination", "type": "depends_on"},
+      {"source_id": "conclusion", "target_id": "calibration", "type": "depends_on"}
+    ]
+  }
+]

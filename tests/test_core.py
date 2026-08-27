@@ -9,6 +9,8 @@ from omega.evidence import evidence_strength, normalize_evidence
 from omega.benchmark import run_ranking_benchmark
 from omega.ontology import run_taxonomy_benchmark
 from omega.operation_benchmark import run_operation_benchmark
+from omega.scoring import ScoringProfile
+from omega.sensitivity import run_sensitivity_benchmark
 
 
 class CoreTests(unittest.TestCase):
@@ -88,6 +90,19 @@ class CoreTests(unittest.TestCase):
         result = run_operation_benchmark()
         self.assertTrue(result["passed"])
         self.assertEqual({"passed": 5, "total": 5}, result["summary"])
+
+    def test_break_it_sensitivity_is_robust_across_profiles(self):
+        result = run_sensitivity_benchmark()
+        self.assertTrue(result["gate_passed"])
+        self.assertEqual({"cases": 3, "profiles": 4, "robust_case_rate": 1.0}, result["metrics"])
+
+    def test_invalid_scoring_profile_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "weights"):
+            ScoringProfile("invalid", -1, 0, 0)
+
+    def test_break_it_discloses_scoring_profile(self):
+        result = self.engine.break_it()
+        self.assertEqual("balanced-v1", result["scoring_profile"]["name"])
 
     def test_why_reports_direct_contradiction_as_challenge(self):
         counter = self.store.add_node(self.problem["id"], "fact", "Counterexample", 0.9, ["observed"])

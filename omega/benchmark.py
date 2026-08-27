@@ -5,6 +5,7 @@ from typing import Any
 from .engine import Engine
 from .ontology import run_taxonomy_benchmark
 from .operation_benchmark import run_operation_benchmark
+from .sensitivity import run_sensitivity_benchmark
 
 
 def _node(node_id: str, kind: str, confidence: float, evidence: list | None = None) -> dict[str, Any]:
@@ -54,6 +55,8 @@ def run_ranking_benchmark() -> dict[str, Any]:
 
 
 def run_all_benchmarks() -> dict[str, Any]:
-    ranking, taxonomy, operations = run_ranking_benchmark(), run_taxonomy_benchmark(), run_operation_benchmark()
-    return {"ranking": ranking, "taxonomy": taxonomy, "operations": operations,
-            "gate_passed": ranking["gate_passed"] and taxonomy["gate_passed"] and operations["passed"]}
+    ranking, taxonomy = run_ranking_benchmark(), run_taxonomy_benchmark()
+    operations, sensitivity = run_operation_benchmark(), run_sensitivity_benchmark()
+    return {"ranking": ranking, "taxonomy": taxonomy, "operations": operations, "sensitivity": sensitivity,
+            "gate_passed": all((ranking["gate_passed"], taxonomy["gate_passed"], operations["passed"],
+                                sensitivity["gate_passed"]))}

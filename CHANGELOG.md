@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0 — 2026-08-27
+
+- Extracted BREAK IT weights into validated, disclosed scoring profiles.
+- Added separately stored ranking fixtures across product, incident, and science.
+- Added sensitivity evaluation over four materially different profiles.
+- Added a unified eight-gate Core stability audit.
+- Enabled SQLite WAL mode and busy timeout.
+- Added a real multi-process write stress gate with exact-count and integrity checks.
+- Distinguished internal Core-candidate readiness from evidence required for V1.0.
+- Expanded the suite from 29 to 34 tests.
+
 ## 0.6.0 — 2026-08-27
 
 - Added versioned contracts for all edge types and four core operations.

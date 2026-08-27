@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.6 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.7 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -12,6 +12,7 @@ python -m omega.cli --db data/demo.db demo
 python -m omega.cli --db data/omega-self.db self-audit
 python -m omega.cli benchmark
 python -m omega.cli release-check
+python -m omega.cli --db data/omega-self.db stability-audit
 python -m omega.api --db data/omega.db --port 8787
 ```
 
@@ -50,6 +51,8 @@ Current self-audit priority: specify auditable evidence, then validate whether B
 
 Evidence records have a normalized contract: `source`, `observed_at`, `method`, `reliability`, `verification_status`, and `note`. Legacy strings remain readable but are explicitly marked `legacy`. BREAK IT exposes its score components and the calculated evidence strength.
 
+BREAK IT uses a validated and disclosed scoring profile. The default is `balanced-v1`; sensitivity tests also run confidence-heavy, dependency-heavy, and evidence-heavy profiles against separately stored product, incident, and science fixtures.
+
 The ontology has two axes. `type` records epistemic state (`fact`, `assumption`, `constraint`, `unknown`); `role` records function (`measurement`, `prediction`, `policy`, `question`, and related roles). Invalid type/role pairs are rejected. Older databases receive a safe default role during schema migration.
 
 ## Portability and recovery
@@ -62,6 +65,8 @@ python -m omega.cli --db data/omega.db restore backups/omega.db
 ```
 
 Imports verify the bundle fingerprint and the complete graph before one transaction writes anything. Exceptions roll transactions back. `release-check` verifies deterministic export, semantic round-trip, imported graph validity, atomic tamper rejection, and backup restoration.
+
+SQLite uses WAL mode and a busy timeout. `stability-audit` launches multiple Python writer processes against one temporary database as one of its gates. See [docs/CORE_STABILITY.md](docs/CORE_STABILITY.md) for what passing currently means and what it does not mean.
 
 ## V0.x boundary
 

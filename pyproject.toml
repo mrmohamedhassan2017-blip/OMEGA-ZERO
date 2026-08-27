@@ -1,6 +1,6 @@
 [project]
 name = "impossible-machine-omega"
-version = "0.6.0"
+version = "0.7.0"
 description = "A local-first engine for exposing and testing hidden assumptions."
 requires-python = ">=3.11"
 
@@ -9,3 +9,6 @@ omega = "omega.cli:main"
 
 [tool.unittest]
 start-directory = "tests"
+
+[tool.setuptools.package-data]
+omega = ["fixtures/*.json"]

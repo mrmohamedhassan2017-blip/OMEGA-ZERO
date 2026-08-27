@@ -6,13 +6,15 @@ from typing import Any
 from .evidence import evidence_strength
 from .ontology import normalize_role
 from .contracts import CONTRACT_VERSION
+from .scoring import DEFAULT_SCORING_PROFILE, ScoringProfile
 
 
 class Engine:
     """Deterministic reasoning operations over a Problem/Assumption Graph."""
 
-    def __init__(self, graph: dict[str, Any]) -> None:
+    def __init__(self, graph: dict[str, Any], scoring_profile: ScoringProfile | None = None) -> None:
         self.graph = graph
+        self.scoring_profile = scoring_profile or DEFAULT_SCORING_PROFILE
         self.nodes = {n["id"]: n for n in graph["nodes"]}
         self.outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
         self.incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -50,9 +52,9 @@ class Engine:
                 continue
             dependents = len([e for e in self.incoming[node["id"]] if e["type"] == "depends_on"])
             strength = evidence_strength(node["evidence"])
-            confidence_risk = round((1 - node["confidence"]) * 0.55, 3)
-            dependency_risk = round(min(dependents, 5) * 0.08, 3)
-            evidence_risk = round((1 - strength) * 0.25, 3)
+            confidence_risk = round((1 - node["confidence"]) * self.scoring_profile.confidence_weight, 3)
+            dependency_risk = round(min(dependents, self.scoring_profile.dependency_cap) * self.scoring_profile.dependency_weight, 3)
+            evidence_risk = round((1 - strength) * self.scoring_profile.evidence_weight, 3)
             fragility = round(confidence_risk + dependency_risk + evidence_risk, 3)
             ranked.append({"node": node, "dependents": dependents, "evidence_strength": strength,
                            "score_components": {"confidence_risk": confidence_risk,
@@ -61,7 +63,8 @@ class Engine:
                            "fragility": min(fragility, 1.0),
                            "attack": f"Falsify: {node['statement']}"})
         ranked.sort(key=lambda x: (-x["fragility"], -x["dependents"], x["node"]["statement"], x["node"]["id"]))
-        return {"operation": "BREAK_IT", "contract_version": CONTRACT_VERSION, "attack_order": ranked}
+        return {"operation": "BREAK_IT", "contract_version": CONTRACT_VERSION,
+                "scoring_profile": self.scoring_profile.to_dict(), "attack_order": ranked}
 
     def prove_it(self, node_id: str) -> dict[str, Any]:
         node = self._require(node_id)

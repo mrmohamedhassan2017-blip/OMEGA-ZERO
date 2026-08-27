@@ -23,10 +23,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
                 "verification_status": "corroborated", "note": "The contract exists; real audit sufficiency remains unproven."}])
         ranking = by_statement.get("BREAK IT fragility ranking corresponds to useful attack priority")
         if ranking:
-            store.update_node(ranking["id"], confidence=0.45, status="testing", evidence=[{
-                "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
-                "method": "three-synthetic-invariant-cases", "reliability": 0.55,
-                "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
+            store.update_node(ranking["id"], confidence=0.65, status="testing", evidence=[{
+                "source": "omega/fixtures/ranking_cases.json + omega.sensitivity", "observed_at": "2026-08-27",
+                "method": "three-labelled-domains-across-four-scoring-profiles", "reliability": 0.7,
+                "verification_status": "reproduced", "note": "Robust in internal fixtures; no external labels yet."}])
         type_claim = by_statement.get("Four node types capture the distinctions needed by real problems")
         if type_claim:
             store.update_node(type_claim["id"], confidence=0.6, status="testing", role="unverified_claim", evidence=[{
@@ -68,10 +68,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         ("tests", "goal", "supports"), ("goal", "boundary", "depends_on")]:
         store.add_edge(pid, nodes[source]["id"], nodes[target]["id"], relation)
     store.update_node(nodes["evidence"]["id"], status="testing")
-    store.update_node(nodes["ranking"]["id"], confidence=0.45, status="testing", evidence=[{
-        "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
-        "method": "three-synthetic-invariant-cases", "reliability": 0.55,
-        "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
+    store.update_node(nodes["ranking"]["id"], confidence=0.65, status="testing", evidence=[{
+        "source": "omega/fixtures/ranking_cases.json + omega.sensitivity", "observed_at": "2026-08-27",
+        "method": "three-labelled-domains-across-four-scoring-profiles", "reliability": 0.7,
+        "verification_status": "reproduced", "note": "Robust in internal fixtures; no external labels yet."}])
     store.update_node(nodes["types"]["id"], confidence=0.6, status="testing", role="unverified_claim", evidence=[{
         "source": "omega.ontology:run_taxonomy_benchmark", "observed_at": "2026-08-27",
         "method": "12-human-labelled-cases-across-three-domains", "reliability": 0.65,

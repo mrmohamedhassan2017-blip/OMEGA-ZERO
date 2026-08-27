@@ -92,3 +92,19 @@ The fixture is independently labelled relative to execution, but it remains auth
 ### Next falsification target
 
 Evaluate BREAK IT weight sensitivity and ranking agreement on multiple labelled graphs whose expected priorities are stored separately from the scoring implementation. Then define an explicit Core stability checklist and audit every gate before considering V1.0.
+
+## Run 006 — 2026-08-27
+
+BREAK IT weights now live in a validated `ScoringProfile` and every result discloses the active values. Three labelled graphs—product, incident, and science—are stored separately from the scorer. Each expected first priority remained first under four profiles: balanced, confidence-heavy, dependency-heavy, and evidence-heavy. Robust case rate: `1.0` across 12 profile/case combinations.
+
+The stability audit initially identified concurrent writes as an untested internal risk. OMEGA immediately attacked that result: SQLite now uses WAL plus a busy timeout, and four Python processes successfully created 32 problems and 32 nodes with exact counts and a clean integrity check.
+
+Current result: 8/8 internal Core-candidate gates pass and 34 tests pass.
+
+### Honest interpretation
+
+`core_candidate_passed` is true, but `ready_for_v1` is false. The remaining blockers cannot honestly be removed by writing more expectations inside OMEGA: usefulness needs independently collected problem outcomes, and ranking needs labels not authored by the scoring project.
+
+### Next falsification target
+
+Create a reproducible external-evaluation protocol and an importable evaluation-record format. OMEGA can then accept blinded labels and outcomes without changing the scorer after seeing them.

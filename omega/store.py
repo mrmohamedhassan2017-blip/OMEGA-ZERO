@@ -26,6 +26,7 @@ class Store:
         db = sqlite3.connect(self.path)
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA foreign_keys = ON")
+        db.execute("PRAGMA busy_timeout = 10000")
         try:
             yield db
             db.commit()
@@ -37,6 +38,7 @@ class Store:
 
     def _init_schema(self) -> None:
         with self.connect() as db:
+            db.execute("PRAGMA journal_mode = WAL")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS schema_meta (
                     key TEXT PRIMARY KEY, value TEXT NOT NULL
@@ -327,3 +329,13 @@ class Store:
             target_db.close(); source_db.close()
         self._init_schema()
         return {"restored": True, "source": str(source_path.resolve()), "problems": len(self.list_problems())}
+
+    def database_health(self) -> dict[str, Any]:
+        with self.connect() as db:
+            quick_check = db.execute("PRAGMA quick_check").fetchone()[0]
+            version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
+            counts = {table: db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                      for table in ("problems", "nodes", "edges")}
+        return {"healthy": quick_check == "ok" and version_row is not None,
+                "quick_check": quick_check, "schema_version": int(version_row[0]) if version_row else None,
+                "counts": counts}

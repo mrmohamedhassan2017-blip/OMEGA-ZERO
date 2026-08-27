@@ -8,6 +8,7 @@ from .store import Store
 from .self_model import self_audit
 from .benchmark import run_all_benchmarks
 from .release import run_release_gates
+from .stability import run_stability_audit
 
 
 def demo(db_path: str) -> None:
@@ -31,7 +32,7 @@ def main() -> None:
     serve = sub.add_parser("serve"); serve.add_argument("--host", default="127.0.0.1"); serve.add_argument("--port", type=int, default=8787)
     sub.add_parser("demo")
     sub.add_parser("self-audit")
-    sub.add_parser("benchmark"); sub.add_parser("release-check")
+    sub.add_parser("benchmark"); sub.add_parser("release-check"); sub.add_parser("stability-audit")
     export = sub.add_parser("export"); export.add_argument("problem_id"); export.add_argument("--out", required=True)
     import_cmd = sub.add_parser("import"); import_cmd.add_argument("path")
     backup = sub.add_parser("backup"); backup.add_argument("path")
@@ -45,6 +46,8 @@ def main() -> None:
         print(json.dumps(run_all_benchmarks(), ensure_ascii=False, indent=2))
     elif args.command == "release-check":
         print(json.dumps(run_release_gates(), ensure_ascii=False, indent=2))
+    elif args.command == "stability-audit":
+        print(json.dumps(run_stability_audit(Store(args.db)), ensure_ascii=False, indent=2))
     elif args.command == "export":
         bundle = Store(args.db).export_problem(args.problem_id)
         Path(args.out).write_text(json.dumps(bundle, ensure_ascii=False, indent=2), encoding="utf-8")
