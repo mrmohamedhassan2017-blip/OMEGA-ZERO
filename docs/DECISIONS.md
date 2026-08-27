@@ -57,3 +57,23 @@ Keep small synthetic benchmark cases as executable invariants for confidence, ev
 Keep the four core node types as epistemic categories: fact, assumption, constraint, and unknown. Add a constrained functional `role` axis instead of multiplying top-level types. For example, a fact may be a measurement or event; an assumption may be a hypothesis or prediction; a constraint may be a policy or invariant; an unknown may be a question or missing data.
 
 This model covers the current product, incident, and scientific reference cases while keeping graph operations dependent on epistemic state. It does not claim universal domain coverage. Unsupported type/role pairs are rejected, and schema migration assigns an explicit default role to older nodes.
+
+## ADR-010 — Portable canonical problem bundles
+
+**Status:** Accepted — 2026-08-27
+
+Export a problem as canonical JSON containing semantic problem, node, evidence, and edge fields, excluding database timestamps and local IDs. Attach a SHA-256 fingerprint of the canonical payload. Import verifies the fingerprint, validates every node and edge, rejects dependency cycles, and writes the graph in one transaction with fresh local IDs.
+
+The fingerprint detects accidental or unacknowledged modification; it is not a signature and does not establish authorship.
+
+## ADR-011 — Roll back failed transactions
+
+**Status:** Accepted — 2026-08-27
+
+Database contexts commit only after successful completion. Any exception triggers rollback before closing the connection. This is a required invariant for imports and other future multi-write operations.
+
+## ADR-012 — Release gates are executable
+
+**Status:** Accepted — 2026-08-27
+
+The core release check must demonstrate deterministic export, semantic export/import round-trip, graph validity after import, atomic rejection of tampering, and SQLite backup restoration. These establish lifecycle integrity, not the usefulness of recommendations to a human.

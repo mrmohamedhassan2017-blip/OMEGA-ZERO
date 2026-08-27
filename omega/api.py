@@ -33,6 +33,8 @@ def make_handler(store: Store):
                     return self._send(200, {"problems": store.list_problems()})
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "graph":
                     return self._send(200, store.graph(parts[1]))
+                if len(parts) == 3 and parts[0] == "problems" and parts[2] == "export":
+                    return self._send(200, store.export_problem(parts[1]))
                 self._send(404, {"error": "route not found"})
             except KeyError as exc:
                 self._send(404, {"error": str(exc)})
@@ -43,6 +45,8 @@ def make_handler(store: Store):
                 data = self._body()
                 if parts == ["problems"]:
                     return self._send(201, store.create_problem(data["title"], data.get("description", "")))
+                if parts == ["imports"]:
+                    return self._send(201, store.import_problem(data))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "nodes":
                     return self._send(201, store.add_node(parts[1], data["type"], data["statement"],
                                                            data.get("confidence", 0.5), data.get("evidence"), data.get("role")))
@@ -60,6 +64,15 @@ def make_handler(store: Store):
                 self._send(404, {"error": "route not found"})
             except (KeyError, ValueError, json.JSONDecodeError) as exc:
                 self._send(400, {"error": str(exc)})
+
+        def do_DELETE(self) -> None:
+            parts = urlparse(self.path).path.strip("/").split("/")
+            try:
+                if len(parts) == 2 and parts[0] == "problems":
+                    return self._send(200, store.delete_problem(parts[1]))
+                self._send(404, {"error": "route not found"})
+            except KeyError as exc:
+                self._send(404, {"error": str(exc)})
 
         def do_PATCH(self) -> None:
             parts = urlparse(self.path).path.strip("/").split("/")

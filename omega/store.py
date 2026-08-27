@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sqlite3
 import uuid
 from contextlib import contextmanager
@@ -28,6 +29,9 @@ class Store:
         try:
             yield db
             db.commit()
+        except Exception:
+            db.rollback()
+            raise
         finally:
             db.close()
 
@@ -88,6 +92,13 @@ class Store:
         with self.connect() as db:
             row = db.execute("SELECT * FROM problems WHERE title=? ORDER BY created_at LIMIT 1", (title,)).fetchone()
         return dict(row) if row else None
+
+    def delete_problem(self, problem_id: str) -> dict[str, Any]:
+        graph = self.graph(problem_id)
+        with self.connect() as db:
+            db.execute("DELETE FROM problems WHERE id=?", (problem_id,))
+        return {"deleted": True, "problem_id": problem_id, "nodes_deleted": len(graph["nodes"]),
+                "edges_deleted": len(graph["edges"])}
 
     def add_node(self, problem_id: str, kind: str, statement: str, confidence: float = 0.5,
                  evidence: list[Any] | None = None, role: str | None = None) -> dict[str, Any]:
@@ -176,3 +187,136 @@ class Store:
             node["role"] = normalize_role(node["type"], node.get("role"))
             node["evidence"] = normalize_evidence(json.loads(node["evidence"]))
         return {"problem": problem, "nodes": nodes, "edges": edges}
+
+    @staticmethod
+    def _canonical_json(value: Any) -> str:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+    def export_problem(self, problem_id: str) -> dict[str, Any]:
+        graph = self.graph(problem_id)
+        ordered_nodes = sorted(graph["nodes"], key=lambda node: (
+            node["type"], node["role"], node["statement"], node["confidence"], node["status"],
+            self._canonical_json(node["evidence"]), node["id"]))
+        keys = {node["id"]: f"n{index}" for index, node in enumerate(ordered_nodes)}
+        payload = {
+            "format": "omega.problem-bundle", "format_version": 1,
+            "problem": {"title": graph["problem"]["title"], "description": graph["problem"]["description"]},
+            "nodes": [{"key": keys[node["id"]], "type": node["type"], "role": node["role"],
+                       "statement": node["statement"], "confidence": node["confidence"],
+                       "evidence": node["evidence"], "status": node["status"]} for node in ordered_nodes],
+            "edges": sorted([{"source": keys[edge["source_id"]], "target": keys[edge["target_id"]],
+                              "type": edge["type"]} for edge in graph["edges"]],
+                            key=lambda edge: (edge["source"], edge["target"], edge["type"])),
+        }
+        return {"payload": payload,
+                "sha256": hashlib.sha256(self._canonical_json(payload).encode("utf-8")).hexdigest()}
+
+    def import_problem(self, bundle: dict[str, Any]) -> dict[str, Any]:
+        payload = bundle.get("payload")
+        if not isinstance(payload, dict) or bundle.get("sha256") != hashlib.sha256(
+                self._canonical_json(payload).encode("utf-8")).hexdigest():
+            raise ValueError("bundle fingerprint mismatch")
+        if payload.get("format") != "omega.problem-bundle" or payload.get("format_version") != 1:
+            raise ValueError("unsupported bundle format or version")
+        problem = payload.get("problem")
+        if not isinstance(problem, dict) or not str(problem.get("title", "")).strip():
+            raise ValueError("bundle problem title is required")
+        raw_nodes, raw_edges = payload.get("nodes"), payload.get("edges")
+        if not isinstance(raw_nodes, list) or not isinstance(raw_edges, list):
+            raise ValueError("bundle nodes and edges must be lists")
+        prepared, keys = [], set()
+        valid_statuses = {"open", "testing", "supported", "falsified", "resolved"}
+        for node in raw_nodes:
+            if not isinstance(node, dict) or not str(node.get("key", "")).strip() or node["key"] in keys:
+                raise ValueError("bundle node keys must be present and unique")
+            kind = node.get("type")
+            if kind not in NODE_TYPES:
+                raise ValueError(f"invalid imported node type: {kind}")
+            role = normalize_role(kind, node.get("role"))
+            confidence = float(node.get("confidence", 0.5))
+            if not 0 <= confidence <= 1:
+                raise ValueError("imported confidence must be between 0 and 1")
+            status = node.get("status", "open")
+            if status not in valid_statuses:
+                raise ValueError("invalid imported node status")
+            keys.add(node["key"])
+            prepared.append({**node, "role": role, "confidence": confidence, "status": status,
+                             "statement": str(node.get("statement", "")).strip(),
+                             "evidence": normalize_evidence(node.get("evidence"))})
+            if not prepared[-1]["statement"]:
+                raise ValueError("imported node statement is required")
+        dependency_adjacency: dict[str, list[str]] = {}
+        seen_edges = set()
+        for edge in raw_edges:
+            if not isinstance(edge, dict) or edge.get("source") not in keys or edge.get("target") not in keys:
+                raise ValueError("imported edge references an unknown node")
+            signature = (edge["source"], edge["target"], edge.get("type"))
+            if edge["source"] == edge["target"] or edge.get("type") not in EDGE_TYPES or signature in seen_edges:
+                raise ValueError("invalid, duplicate, or self-referential imported edge")
+            seen_edges.add(signature)
+            if edge["type"] == "depends_on":
+                dependency_adjacency.setdefault(edge["source"], []).append(edge["target"])
+        self._assert_acyclic(dependency_adjacency)
+
+        problem_id = self._id("prb")
+        node_ids = {node["key"]: self._id("node") for node in prepared}
+        with self.connect() as db:
+            db.execute("INSERT INTO problems(id,title,description) VALUES(?,?,?)",
+                       (problem_id, str(problem["title"]).strip(), str(problem.get("description", ""))))
+            for node in prepared:
+                db.execute("INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence,status) VALUES(?,?,?,?,?,?,?,?)",
+                           (node_ids[node["key"]], problem_id, node["type"], node["role"], node["statement"],
+                            node["confidence"], json.dumps(node["evidence"]), node["status"]))
+            for edge in raw_edges:
+                db.execute("INSERT INTO edges(id,problem_id,source_id,target_id,type) VALUES(?,?,?,?,?)",
+                           (self._id("edge"), problem_id, node_ids[edge["source"]], node_ids[edge["target"]], edge["type"]))
+        return {"problem_id": problem_id, "nodes_imported": len(prepared), "edges_imported": len(raw_edges),
+                "sha256": bundle["sha256"]}
+
+    @staticmethod
+    def _assert_acyclic(adjacency: dict[str, list[str]]) -> None:
+        visiting, visited = set(), set()
+        def visit(node: str) -> None:
+            if node in visiting:
+                raise ValueError("imported depends_on graph contains a cycle")
+            if node in visited:
+                return
+            visiting.add(node)
+            for target in adjacency.get(node, []):
+                visit(target)
+            visiting.remove(node); visited.add(node)
+        for node in list(adjacency):
+            visit(node)
+
+    def backup_to(self, destination: str | Path) -> dict[str, Any]:
+        target_path = Path(destination)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        source = sqlite3.connect(self.path)
+        target = sqlite3.connect(target_path)
+        try:
+            source.backup(target)
+        finally:
+            target.close(); source.close()
+        digest = hashlib.sha256(target_path.read_bytes()).hexdigest()
+        return {"path": str(target_path.resolve()), "sha256": digest, "bytes": target_path.stat().st_size}
+
+    def restore_from(self, source: str | Path) -> dict[str, Any]:
+        source_path = Path(source)
+        if not source_path.is_file():
+            raise ValueError("backup file not found")
+        check = sqlite3.connect(f"file:{source_path.as_posix()}?mode=ro", uri=True)
+        try:
+            if check.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                raise ValueError("backup failed SQLite integrity check")
+            tables = {row[0] for row in check.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if not {"problems", "nodes", "edges"}.issubset(tables):
+                raise ValueError("backup is not an OMEGA database")
+        finally:
+            check.close()
+        source_db, target_db = sqlite3.connect(source_path), sqlite3.connect(self.path)
+        try:
+            source_db.backup(target_db)
+        finally:
+            target_db.close(); source_db.close()
+        self._init_schema()
+        return {"restored": True, "source": str(source_path.resolve()), "problems": len(self.list_problems())}

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-08-27
+
+- Corrected transaction handling so exceptions roll back instead of committing partial changes.
+- Added deterministic canonical problem export with SHA-256 fingerprint.
+- Added validated atomic import with fresh local IDs and dependency-cycle rejection.
+- Added cascading problem deletion plus SQLite backup and restore commands.
+- Added HTTP export/import/delete lifecycle endpoints.
+- Added five executable release gates and integrated them into self-audit.
+- Expanded the suite from 20 to 26 tests.
+
 ## 0.4.0 — 2026-08-27
 
 - Added a functional role axis while preserving the four epistemic node types.

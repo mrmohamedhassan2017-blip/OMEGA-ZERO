@@ -59,6 +59,19 @@ class ApiTests(unittest.TestCase):
                                     {"type": "constraint", "role": "prediction", "statement": "Mismatch"})
         self.assertEqual(400, status); self.assertIn("not valid", data["error"])
 
+    def test_export_import_delete_lifecycle(self):
+        _, problem = self.request("POST", "/problems", {"title": "Portable API", "description": "test"})
+        _, node = self.request("POST", f"/problems/{problem['id']}/nodes",
+                               {"type": "unknown", "role": "question", "statement": "Will it round-trip?"})
+        status, bundle = self.request("GET", f"/problems/{problem['id']}/export")
+        self.assertEqual(200, status); self.assertIn("sha256", bundle)
+        status, imported = self.request("POST", "/imports", bundle)
+        self.assertEqual(201, status); self.assertEqual(1, imported["nodes_imported"])
+        status, deleted = self.request("DELETE", f"/problems/{problem['id']}")
+        self.assertEqual(200, status); self.assertEqual(1, deleted["nodes_deleted"])
+        status, _ = self.request("GET", f"/problems/{problem['id']}/graph")
+        self.assertEqual(404, status)
+
 
 if __name__ == "__main__":
     unittest.main()

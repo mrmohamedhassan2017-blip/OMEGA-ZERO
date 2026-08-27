@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.4 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.5 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -11,6 +11,7 @@ python -m unittest discover -s tests -v
 python -m omega.cli --db data/demo.db demo
 python -m omega.cli --db data/omega-self.db self-audit
 python -m omega.cli benchmark
+python -m omega.cli release-check
 python -m omega.api --db data/omega.db --port 8787
 ```
 
@@ -22,6 +23,9 @@ Health check: `GET http://127.0.0.1:8787/health`
 - `POST /problems/{id}/nodes` — `{ "type": "assumption", "role": "hypothesis", "statement": "...", "confidence": 0.4, "evidence": [] }`
 - `POST /problems/{id}/edges` — `{ "source_id": "...", "target_id": "...", "type": "depends_on" }`
 - `GET /problems/{id}/graph`
+- `GET /problems/{id}/export` — canonical portable bundle with SHA-256 fingerprint
+- `POST /imports` — validate and atomically import a bundle
+- `DELETE /problems/{id}` — delete a problem and its graph
 - `POST /problems/{id}/actions/why` — `{ "node_id": "..." }`
 - `POST /problems/{id}/actions/break-it` — `{}`
 - `POST /problems/{id}/actions/prove-it` — `{ "node_id": "..." }`
@@ -40,6 +44,17 @@ Current self-audit priority: specify auditable evidence, then validate whether B
 Evidence records have a normalized contract: `source`, `observed_at`, `method`, `reliability`, `verification_status`, and `note`. Legacy strings remain readable but are explicitly marked `legacy`. BREAK IT exposes its score components and the calculated evidence strength.
 
 The ontology has two axes. `type` records epistemic state (`fact`, `assumption`, `constraint`, `unknown`); `role` records function (`measurement`, `prediction`, `policy`, `question`, and related roles). Invalid type/role pairs are rejected. Older databases receive a safe default role during schema migration.
+
+## Portability and recovery
+
+```powershell
+python -m omega.cli --db data/omega.db export PROBLEM_ID --out problem.omega.json
+python -m omega.cli --db data/other.db import problem.omega.json
+python -m omega.cli --db data/omega.db backup backups/omega.db
+python -m omega.cli --db data/omega.db restore backups/omega.db
+```
+
+Imports verify the bundle fingerprint and the complete graph before one transaction writes anything. Exceptions roll transactions back. `release-check` verifies deterministic export, semantic round-trip, imported graph validity, atomic tamper rejection, and backup restoration.
 
 ## V0.x boundary
 

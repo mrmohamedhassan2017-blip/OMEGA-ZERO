@@ -5,6 +5,7 @@ from typing import Any
 from .engine import Engine
 from .store import Store
 from .benchmark import run_all_benchmarks
+from .release import run_release_gates
 
 TITLE = "OMEGA Core can produce trustworthy, actionable analysis"
 
@@ -32,6 +33,12 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
                 "source": "omega.ontology:run_taxonomy_benchmark", "observed_at": "2026-08-27",
                 "method": "12-human-labelled-cases-across-three-domains", "reliability": 0.65,
                 "verification_status": "reproduced", "note": "Supports two-axis representability in the fixture set only."}])
+        trust_claim = by_statement.get("OMEGA analysis is trustworthy and actionable")
+        if trust_claim:
+            store.update_node(trust_claim["id"], confidence=0.7, status="testing", role="unverified_claim", evidence=[{
+                "source": "omega.release:run_release_gates", "observed_at": "2026-08-27",
+                "method": "five-automated-portability-and-recovery-gates", "reliability": 0.8,
+                "verification_status": "reproduced", "note": "Establishes core lifecycle behavior, not outcome usefulness."}])
         return store.graph(existing["id"])
 
     problem = store.create_problem(TITLE, "OMEGA V0.x applies its own reasoning model to its design and claims.")
@@ -63,6 +70,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "source": "omega.ontology:run_taxonomy_benchmark", "observed_at": "2026-08-27",
         "method": "12-human-labelled-cases-across-three-domains", "reliability": 0.65,
         "verification_status": "reproduced", "note": "Supports two-axis representability in the fixture set only."}])
+    store.update_node(nodes["goal"]["id"], confidence=0.7, status="testing", role="unverified_claim", evidence=[{
+        "source": "omega.release:run_release_gates", "observed_at": "2026-08-27",
+        "method": "five-automated-portability-and-recovery-gates", "reliability": 0.8,
+        "verification_status": "reproduced", "note": "Establishes core lifecycle behavior, not outcome usefulness."}])
     return store.graph(pid)
 
 
@@ -72,4 +83,4 @@ def self_audit(store: Store) -> dict[str, Any]:
     goal = next(node for node in graph["nodes"] if node["statement"] == "OMEGA analysis is trustworthy and actionable")
     return {"graph": graph, "validation": engine.validate(), "why": engine.why(goal["id"]),
             "break_it": engine.break_it(), "prove_it": engine.prove_it(goal["id"]),
-            "benchmarks": run_all_benchmarks()}
+            "benchmarks": run_all_benchmarks(), "release_gates": run_release_gates()}

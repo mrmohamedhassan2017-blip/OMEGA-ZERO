@@ -50,3 +50,23 @@ The test demonstrates that the two-axis ontology handles the selected cases with
 ### Next falsification target
 
 The overall trustworthiness claim is now the highest fragile node. The next increment should turn stability into explicit release gates: persistence round-trips, export/import, recovery behavior, deterministic outputs, API lifecycle coverage, and a documented completion audit.
+
+## Run 004 — 2026-08-27
+
+The core now has executable lifecycle gates. All five passed:
+
+1. Repeated exports of unchanged state are byte-semantically deterministic.
+2. Export/import/export preserves the canonical bundle and fingerprint.
+3. Imported graphs pass structural validation.
+4. Fingerprint tampering is rejected without adding a partial problem.
+5. A deleted graph is recovered from a verified SQLite backup.
+
+The transaction manager was corrected during this work: exceptions now roll back rather than reaching a commit in `finally`. A forced-failure test proves this behavior. The full suite contains 26 passing tests, including the HTTP export/import/delete lifecycle.
+
+### Honest interpretation
+
+These gates support storage and lifecycle trustworthiness. They do not show that WHY explanations change understanding, BREAK IT chooses the best real experiment, PROVE IT plans are sufficient, or WHAT IF impact is useful to a decision-maker. The overall claim remains `testing` at confidence 0.70.
+
+### Next falsification target
+
+Formalize edge semantics and operation contracts, then build independently expected end-to-end problem fixtures for all four operations. Core stability cannot be declared from storage integrity alone.
