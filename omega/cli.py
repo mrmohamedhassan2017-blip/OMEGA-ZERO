@@ -12,6 +12,7 @@ from .stability import run_stability_audit
 from .evaluation import aggregate_records, prepare_blind_case, run_blind_case, score_reveal
 from .spec import validate_spec
 from .report import analyze_spec, render_markdown
+from .impossibility import build_impossibility_map
 
 
 def _write_new_json(path: str, payload: object) -> Path:
@@ -59,6 +60,7 @@ def main() -> None:
     spec_check = sub.add_parser("spec-check"); spec_check.add_argument("path")
     run_spec_cmd = sub.add_parser("run-spec"); run_spec_cmd.add_argument("path"); run_spec_cmd.add_argument("--json-out", required=True)
     run_spec_cmd.add_argument("--markdown-out")
+    imap = sub.add_parser("impossibility-map"); imap.add_argument("problem_id"); imap.add_argument("--target")
     args = parser.parse_args()
     if args.command == "serve":
         run(args.host, args.port, args.db)
@@ -122,6 +124,9 @@ def main() -> None:
             markdown_path.parent.mkdir(parents=True, exist_ok=True); markdown_path.write_text(render_markdown(report), encoding="utf-8")
         print(json.dumps({"json_report": str(output), "markdown_report": str(markdown_path.resolve()) if markdown_path else None,
                           "problem_id": report["problem_id"]}, indent=2))
+    elif args.command == "impossibility-map":
+        print(json.dumps(build_impossibility_map(Store(args.db).graph(args.problem_id), args.target),
+                         ensure_ascii=False, indent=2))
     else:
         demo(args.db)
 
