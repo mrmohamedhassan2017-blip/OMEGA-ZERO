@@ -55,6 +55,7 @@ def main() -> None:
     score = sub.add_parser("eval-score"); score.add_argument("public_case"); score.add_argument("prediction"); score.add_argument("reveal")
     score.add_argument("--out", required=True)
     aggregate = sub.add_parser("eval-aggregate"); aggregate.add_argument("records", nargs="+")
+    sub.add_parser("eval-list")
     spec_check = sub.add_parser("spec-check"); spec_check.add_argument("path")
     run_spec_cmd = sub.add_parser("run-spec"); run_spec_cmd.add_argument("path"); run_spec_cmd.add_argument("--json-out", required=True)
     run_spec_cmd.add_argument("--markdown-out")
@@ -105,6 +106,9 @@ def main() -> None:
     elif args.command == "eval-aggregate":
         records = [json.loads(Path(path).read_text(encoding="utf-8")) for path in args.records]
         print(json.dumps(aggregate_records(records), ensure_ascii=False, indent=2))
+    elif args.command == "eval-list":
+        records = Store(args.db).list_evaluations()
+        print(json.dumps({"records": len(records), "evaluations": records}, ensure_ascii=False, indent=2))
     elif args.command == "spec-check":
         print(json.dumps(validate_spec(json.loads(Path(args.path).read_text(encoding="utf-8"))), ensure_ascii=False, indent=2))
     elif args.command == "run-spec":

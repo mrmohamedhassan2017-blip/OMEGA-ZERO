@@ -78,6 +78,9 @@ class EvaluationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "verified"):
             self.store.record_evaluation(record)
 
+    def test_empty_evaluation_list_is_explicit(self):
+        self.assertEqual([], self.store.list_evaluations())
+
 
 if __name__ == "__main__":
     unittest.main()

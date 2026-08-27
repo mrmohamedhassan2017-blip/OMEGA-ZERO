@@ -2,6 +2,8 @@
 
 OMEGA V0.11 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
+Verified blind-evaluation results are persisted locally by `eval-score` and can be inspected with `eval-list`; the HTTP equivalents are `POST /evaluations` and `GET /evaluations`.
+
 ## Run
 
 Requires Python 3.11+ and has no third-party runtime dependencies.
