@@ -30,6 +30,7 @@ class SpecTests(unittest.TestCase):
         self.assertTrue(report["unasked_questions"])
         self.assertIn("impossibility_score", report["impossibility_map"])
         self.assertTrue(report["impossibility_map"]["blockers"])
+        self.assertIn("one_miracle", report["impossibility_map"])
         self.assertEqual(1, report["audit_events"])
         markdown = render_markdown(report)
         self.assertIn("## WHY", markdown); self.assertIn("## BREAK IT", markdown)
