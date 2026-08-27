@@ -8,6 +8,7 @@ from omega.store import Store
 from omega.evidence import evidence_strength, normalize_evidence
 from omega.benchmark import run_ranking_benchmark
 from omega.ontology import run_taxonomy_benchmark
+from omega.operation_benchmark import run_operation_benchmark
 
 
 class CoreTests(unittest.TestCase):
@@ -18,7 +19,7 @@ class CoreTests(unittest.TestCase):
         self.goal = self.store.add_node(self.problem["id"], "assumption", "Launch succeeds", 0.4)
         self.fact = self.store.add_node(self.problem["id"], "fact", "Prototype works", 0.9, ["test run"])
         self.unknown = self.store.add_node(self.problem["id"], "unknown", "Demand exists", 0.2)
-        self.store.add_edge(self.problem["id"], self.goal["id"], self.fact["id"], "supports")
+        self.store.add_edge(self.problem["id"], self.fact["id"], self.goal["id"], "supports")
         self.store.add_edge(self.problem["id"], self.goal["id"], self.unknown["id"], "depends_on")
         self.engine = Engine(self.store.graph(self.problem["id"]))
 
@@ -82,6 +83,32 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(result["gate_passed"])
         self.assertEqual(12, result["metrics"]["cases"])
         self.assertEqual(["incident", "product", "science"], result["metrics"]["domains"])
+
+    def test_end_to_end_operation_contract_passes(self):
+        result = run_operation_benchmark()
+        self.assertTrue(result["passed"])
+        self.assertEqual({"passed": 5, "total": 5}, result["summary"])
+
+    def test_why_reports_direct_contradiction_as_challenge(self):
+        counter = self.store.add_node(self.problem["id"], "fact", "Counterexample", 0.9, ["observed"])
+        self.store.add_edge(self.problem["id"], counter["id"], self.goal["id"], "contradicts")
+        result = Engine(self.store.graph(self.problem["id"])).why(self.goal["id"])
+        self.assertEqual([counter["id"]], [node["id"] for node in result["challenges"]])
+
+    def test_v03_support_edges_migrate_to_intuitive_direction(self):
+        path = Path(self.tmp.name) / "supports-v3.db"
+        old = Store(path)
+        p = old.create_problem("Old semantics", "migration")
+        claim = old.add_node(p["id"], "assumption", "Claim")
+        fact = old.add_node(p["id"], "fact", "Evidence", evidence=["source"])
+        # Recreate the V0.3 direction and version marker directly.
+        with old.connect() as db:
+            db.execute("INSERT INTO edges(id,problem_id,source_id,target_id,type) VALUES('old-edge',?,?,?,'supports')",
+                       (p["id"], claim["id"], fact["id"]))
+            db.execute("UPDATE schema_meta SET value='3' WHERE key='schema_version'")
+        migrated = Store(path).graph(p["id"])
+        edge = migrated["edges"][0]
+        self.assertEqual((fact["id"], claim["id"]), (edge["source_id"], edge["target_id"]))
 
     def test_invalid_functional_role_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "not valid"):

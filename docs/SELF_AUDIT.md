@@ -70,3 +70,25 @@ These gates support storage and lifecycle trustworthiness. They do not show that
 ### Next falsification target
 
 Formalize edge semantics and operation contracts, then build independently expected end-to-end problem fixtures for all four operations. Core stability cannot be declared from storage integrity alone.
+
+## Run 005 — 2026-08-27
+
+Relationship and operation contract 1.0 is now executable. The `supports` direction was corrected from the earlier internal convention to the intuitive `supporter -> supported` form, with a one-time migration for existing databases.
+
+The labelled launch-decision fixture passed 5/5 checks:
+
+1. WHY returns prerequisites, an incoming supporter, an unresolved gap, and a contradiction.
+2. BREAK IT selects the labelled weakest dependency bottleneck.
+3. PROVE IT returns a falsifiable plan and the prerequisites that must be controlled.
+4. WHAT IF propagates a failed prerequisite to the dependent claim.
+5. All operation results declare contract version 1.0.
+
+The complete suite now contains 29 passing tests. OMEGA's self-WHY traverses five prerequisites and one correctly directed supporting fact. The edge-semantics node moves to `supported` at confidence 0.90.
+
+### Honest interpretation
+
+The fixture is independently labelled relative to execution, but it remains authored inside the project. It proves implementation conformance and catches semantic regression; it does not validate ranking quality or decision usefulness with external users.
+
+### Next falsification target
+
+Evaluate BREAK IT weight sensitivity and ranking agreement on multiple labelled graphs whose expected priorities are stored separately from the scoring implementation. Then define an explicit Core stability checklist and audit every gate before considering V1.0.

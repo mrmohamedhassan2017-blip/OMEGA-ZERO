@@ -4,6 +4,7 @@ from typing import Any
 
 from .engine import Engine
 from .ontology import run_taxonomy_benchmark
+from .operation_benchmark import run_operation_benchmark
 
 
 def _node(node_id: str, kind: str, confidence: float, evidence: list | None = None) -> dict[str, Any]:
@@ -53,6 +54,6 @@ def run_ranking_benchmark() -> dict[str, Any]:
 
 
 def run_all_benchmarks() -> dict[str, Any]:
-    ranking, taxonomy = run_ranking_benchmark(), run_taxonomy_benchmark()
-    return {"ranking": ranking, "taxonomy": taxonomy,
-            "gate_passed": ranking["gate_passed"] and taxonomy["gate_passed"]}
+    ranking, taxonomy, operations = run_ranking_benchmark(), run_taxonomy_benchmark(), run_operation_benchmark()
+    return {"ranking": ranking, "taxonomy": taxonomy, "operations": operations,
+            "gate_passed": ranking["gate_passed"] and taxonomy["gate_passed"] and operations["passed"]}

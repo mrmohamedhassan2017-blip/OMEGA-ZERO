@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 — 2026-08-27
+
+- Added versioned contracts for all edge types and four core operations.
+- Corrected `supports` to the intuitive supporter-to-supported direction.
+- Added one-time schema migration for existing support edges.
+- Updated WHY to report prerequisites, supporters, unresolved gaps, and challenges.
+- Updated WHAT IF propagation and PROVE IT dependency controls.
+- Added a labelled end-to-end operation benchmark with five checks.
+- Removed an untested invalid-role error path from BREAK IT.
+- Expanded the suite from 26 to 29 tests.
+
 ## 0.5.0 — 2026-08-27
 
 - Corrected transaction handling so exceptions roll back instead of committing partial changes.

@@ -16,7 +16,7 @@ def demo(db_path: str) -> None:
     assumption = store.add_node(problem["id"], "assumption", "Users will change behavior", 0.35)
     fact = store.add_node(problem["id"], "fact", "Three users requested the feature", 0.8, ["interview-notes"])
     unknown = store.add_node(problem["id"], "unknown", "Will users pay?", 0.2)
-    store.add_edge(problem["id"], assumption["id"], fact["id"], "supports")
+    store.add_edge(problem["id"], fact["id"], assumption["id"], "supports")
     store.add_edge(problem["id"], assumption["id"], unknown["id"], "depends_on")
     engine = Engine(store.graph(problem["id"]))
     print(json.dumps({"problem": problem, "why": engine.why(assumption["id"]),

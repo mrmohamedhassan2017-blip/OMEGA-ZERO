@@ -39,6 +39,12 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
                 "source": "omega.release:run_release_gates", "observed_at": "2026-08-27",
                 "method": "five-automated-portability-and-recovery-gates", "reliability": 0.8,
                 "verification_status": "reproduced", "note": "Establishes core lifecycle behavior, not outcome usefulness."}])
+        semantics = by_statement.get("Every edge type must have one documented direction and meaning")
+        if semantics:
+            store.update_node(semantics["id"], confidence=0.9, status="supported", role="invariant", evidence=[{
+                "source": "omega.contracts + omega.operation_benchmark", "observed_at": "2026-08-27",
+                "method": "versioned-contract-and-five-executable-checks", "reliability": 0.85,
+                "verification_status": "reproduced", "note": "Establishes implemented semantics, not external usefulness."}])
         return store.graph(existing["id"])
 
     problem = store.create_problem(TITLE, "OMEGA V0.x applies its own reasoning model to its design and claims.")
@@ -59,7 +65,7 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
     for source, target, relation in [
         ("goal", "types", "depends_on"), ("goal", "semantics", "depends_on"),
         ("goal", "ranking", "depends_on"), ("goal", "evidence", "depends_on"),
-        ("goal", "tests", "supports"), ("goal", "boundary", "depends_on")]:
+        ("tests", "goal", "supports"), ("goal", "boundary", "depends_on")]:
         store.add_edge(pid, nodes[source]["id"], nodes[target]["id"], relation)
     store.update_node(nodes["evidence"]["id"], status="testing")
     store.update_node(nodes["ranking"]["id"], confidence=0.45, status="testing", evidence=[{
@@ -74,6 +80,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "source": "omega.release:run_release_gates", "observed_at": "2026-08-27",
         "method": "five-automated-portability-and-recovery-gates", "reliability": 0.8,
         "verification_status": "reproduced", "note": "Establishes core lifecycle behavior, not outcome usefulness."}])
+    store.update_node(nodes["semantics"]["id"], confidence=0.9, status="supported", role="invariant", evidence=[{
+        "source": "omega.contracts + omega.operation_benchmark", "observed_at": "2026-08-27",
+        "method": "versioned-contract-and-five-executable-checks", "reliability": 0.85,
+        "verification_status": "reproduced", "note": "Establishes implemented semantics, not external usefulness."}])
     return store.graph(pid)
 
 

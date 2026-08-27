@@ -77,3 +77,17 @@ Database contexts commit only after successful completion. Any exception trigger
 **Status:** Accepted — 2026-08-27
 
 The core release check must demonstrate deterministic export, semantic export/import round-trip, graph validity after import, atomic rejection of tampering, and SQLite backup restoration. These establish lifecycle integrity, not the usefulness of recommendations to a human.
+
+## ADR-013 — Intuitive, versioned relationship semantics
+
+**Status:** Accepted — 2026-08-27
+
+Relationship contract 1.0 defines `A depends_on B` as A requiring B, and `A supports B` as A providing support to B. `contradicts` is directed for provenance but symmetric for structural impact. `relates_to` carries no inference.
+
+The earlier implementation stored supports in the opposite direction. Schema migration 4 reverses existing support edges once. Core operation responses declare their contract version so consumers can detect future semantic changes.
+
+## ADR-014 — Operation benchmark boundary
+
+**Status:** Accepted — 2026-08-27
+
+Maintain a labelled end-to-end graph that checks WHY prerequisites/support/challenges, BREAK IT bottleneck selection, PROVE IT falsifiability and controls, WHAT IF propagation, and contract-version disclosure. Passing this benchmark proves conformance to the documented contract, not superiority of the contract on real decisions.

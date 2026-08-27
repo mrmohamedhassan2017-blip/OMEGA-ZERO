@@ -17,7 +17,7 @@ def run_release_gates() -> dict[str, Any]:
         evidence = store.add_node(problem["id"], "fact", "Tests ran", 0.9, [{
             "source": "release-gate", "observed_at": "2026-08-27", "method": "automated",
             "reliability": 0.9, "verification_status": "reproduced"}], role="event")
-        store.add_edge(problem["id"], claim["id"], evidence["id"], "supports")
+        store.add_edge(problem["id"], evidence["id"], claim["id"], "supports")
 
         first, second = store.export_problem(problem["id"]), store.export_problem(problem["id"])
         results.append({"gate": "deterministic-export", "passed": first == second, "sha256": first["sha256"]})

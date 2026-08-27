@@ -62,10 +62,17 @@ class Store:
                     UNIQUE(source_id, target_id, type)
                 );
             """)
+            version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
+            previous_version = int(version_row[0]) if version_row else None
             columns = {row[1] for row in db.execute("PRAGMA table_info(nodes)")}
             if "role" not in columns:
                 db.execute("ALTER TABLE nodes ADD COLUMN role TEXT")
-            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','3')")
+            if previous_version is not None and previous_version < 4:
+                db.execute("""DELETE FROM edges AS old WHERE old.type='supports' AND EXISTS (
+                    SELECT 1 FROM edges AS other WHERE other.type='supports'
+                    AND other.source_id=old.target_id AND other.target_id=old.source_id AND other.id < old.id)""")
+                db.execute("UPDATE edges SET source_id=target_id, target_id=source_id WHERE type='supports'")
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','4')")
 
     @staticmethod
     def _id(prefix: str) -> str:

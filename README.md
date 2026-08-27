@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.5 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.6 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -33,7 +33,14 @@ Health check: `GET http://127.0.0.1:8787/health`
 - `POST /problems/{id}/actions/validate` — `{}`
 - `PATCH /nodes/{id}` — update `statement`, `confidence`, `evidence`, or `status`
 
-Edge direction is semantic: `A depends_on B` is stored as source `A`, target `B`.
+## Relationship semantics
+
+- `A depends_on B`: A requires B to hold or be resolved.
+- `A supports B`: A increases support for B.
+- `A contradicts B`: A conflicts with B; structural impact is treated symmetrically.
+- `A relates_to B`: association only; core inference ignores it.
+
+Every operation result declares semantic `contract_version: "1.0"`. WHY follows prerequisites and incoming supporters and reports direct challenges. WHAT IF propagates to dependents, supported claims, and contradictory nodes while explicitly avoiding a causal claim. Older `supports` edges are reversed once by schema migration to match the intuitive direction.
 
 ## Self-application
 

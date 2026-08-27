@@ -5,6 +5,7 @@ from typing import Any
 
 from .evidence import evidence_strength
 from .ontology import normalize_role
+from .contracts import CONTRACT_VERSION
 
 
 class Engine:
@@ -21,28 +22,30 @@ class Engine:
 
     def why(self, node_id: str) -> dict[str, Any]:
         self._require(node_id)
-        reasons, seen = [], {node_id}
+        reasons, challenges, seen = [], [], {node_id}
         queue = deque([(node_id, 0)])
         while queue:
             current, depth = queue.popleft()
-            for edge in self.outgoing[current]:
-                if edge["type"] not in {"depends_on", "supports"}:
-                    continue
-                nxt = edge["target_id"]
+            traversals = []
+            traversals.extend((edge, edge["target_id"]) for edge in self.outgoing[current] if edge["type"] == "depends_on")
+            traversals.extend((edge, edge["source_id"]) for edge in self.incoming[current] if edge["type"] == "supports")
+            for edge, nxt in sorted(traversals, key=lambda item: (item[0]["type"], self.nodes[item[1]]["statement"], item[1])):
                 if nxt not in seen:
                     seen.add(nxt)
                     reasons.append({"depth": depth + 1, "relation": edge["type"], "node": self.nodes[nxt]})
                     queue.append((nxt, depth + 1))
+        for edge in self.incoming[node_id] + self.outgoing[node_id]:
+            if edge["type"] == "contradicts":
+                other = edge["source_id"] if edge["target_id"] == node_id else edge["target_id"]
+                challenges.append(self.nodes[other])
+        challenges.sort(key=lambda node: (node["statement"], node["id"]))
         gaps = [r["node"] for r in reasons if r["node"]["type"] == "unknown"]
-        return {"operation": "WHY", "target": self.nodes[node_id], "reasons": reasons, "unresolved_gaps": gaps}
+        return {"operation": "WHY", "contract_version": CONTRACT_VERSION, "target": self.nodes[node_id],
+                "reasons": reasons, "unresolved_gaps": gaps, "challenges": challenges}
 
     def break_it(self) -> dict[str, Any]:
         ranked = []
         for node in self.nodes.values():
-            try:
-                normalize_role(node["type"], node.get("role"))
-            except (KeyError, ValueError) as exc:
-                issues.append({"severity": "error", "code": "INVALID_TYPE_ROLE", "node_id": node["id"], "detail": str(exc)})
             if node["type"] not in {"assumption", "constraint", "unknown"}:
                 continue
             dependents = len([e for e in self.incoming[node["id"]] if e["type"] == "depends_on"])
@@ -57,8 +60,8 @@ class Engine:
                                                 "evidence_risk": evidence_risk},
                            "fragility": min(fragility, 1.0),
                            "attack": f"Falsify: {node['statement']}"})
-        ranked.sort(key=lambda x: (-x["fragility"], -x["dependents"], x["node"]["id"]))
-        return {"operation": "BREAK_IT", "attack_order": ranked}
+        ranked.sort(key=lambda x: (-x["fragility"], -x["dependents"], x["node"]["statement"], x["node"]["id"]))
+        return {"operation": "BREAK_IT", "contract_version": CONTRACT_VERSION, "attack_order": ranked}
 
     def prove_it(self, node_id: str) -> dict[str, Any]:
         node = self._require(node_id)
@@ -72,7 +75,9 @@ class Engine:
             tests.extend(["Identify who or what imposes this limit.", "Test the boundary and document exceptions."])
         else:
             tests.extend(["Turn the unknown into a measurable question.", "Collect the smallest decisive dataset."])
-        return {"operation": "PROVE_IT", "target": node, "existing_evidence": node["evidence"],
+        dependencies = [self.nodes[e["target_id"]] for e in self.outgoing[node_id] if e["type"] == "depends_on"]
+        return {"operation": "PROVE_IT", "contract_version": CONTRACT_VERSION, "target": node,
+                "existing_evidence": node["evidence"], "dependencies_to_control": dependencies,
                 "test_plan": tests, "pass_condition": "Evidence is reproducible and directly addresses the statement.",
                 "fail_condition": "The result contradicts the statement or remains non-observable."}
 
@@ -82,15 +87,19 @@ class Engine:
         queue = deque([node_id])
         while queue:
             current = queue.popleft()
-            for edge in self.incoming[current]:
-                if edge["type"] not in {"depends_on", "supports", "contradicts"}:
-                    continue
-                nxt = edge["source_id"]
+            traversals = []
+            traversals.extend((edge, edge["source_id"]) for edge in self.incoming[current] if edge["type"] == "depends_on")
+            traversals.extend((edge, edge["target_id"]) for edge in self.outgoing[current] if edge["type"] == "supports")
+            for edge in self.incoming[current] + self.outgoing[current]:
+                if edge["type"] == "contradicts":
+                    traversals.append((edge, edge["source_id"] if edge["target_id"] == current else edge["target_id"]))
+            for edge, nxt in sorted(traversals, key=lambda item: (item[0]["type"], self.nodes[item[1]]["statement"], item[1])):
                 if nxt not in seen:
                     seen.add(nxt)
                     impacted.append({"node": self.nodes[nxt], "via": edge["type"]})
                     queue.append(nxt)
-        return {"operation": "WHAT_IF", "changed": node, "hypothetical_truth": new_value,
+        return {"operation": "WHAT_IF", "contract_version": CONTRACT_VERSION,
+                "changed": node, "hypothetical_truth": new_value,
                 "impacted": impacted, "note": "Impact is structural, not a claim of causal certainty."}
 
     def validate(self) -> dict[str, Any]:
