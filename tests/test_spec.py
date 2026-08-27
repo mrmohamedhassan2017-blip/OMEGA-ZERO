@@ -27,10 +27,12 @@ class SpecTests(unittest.TestCase):
         self.assertTrue(report["validation"]["valid"])
         self.assertEqual("launch", report["analysis_target"]["key"])
         self.assertIn("test_plan", report["prove_it"])
+        self.assertTrue(report["unasked_questions"])
         self.assertEqual(1, report["audit_events"])
         markdown = render_markdown(report)
         self.assertIn("## WHY", markdown); self.assertIn("## BREAK IT", markdown)
         self.assertIn("## PROVE IT", markdown); self.assertIn("## WHAT IF", markdown)
+        self.assertIn("## Unasked questions", markdown)
 
     def test_spec_rejects_missing_analysis_target_before_import(self):
         spec = example_spec(); spec["analysis_target"] = "missing"

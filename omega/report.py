@@ -15,11 +15,12 @@ def analyze_spec(store: Store, spec: dict[str, Any]) -> dict[str, Any]:
     graph = store.graph(problem_id); engine = Engine(graph)
     validation = engine.validate(); why = engine.why(node_id); break_it = engine.break_it()
     prove = engine.prove_it(node_id); what_if = engine.what_if(node_id, False)
+    unasked_questions = [node for node in graph["nodes"] if node["type"] == "unknown"]
     report = {"format": "omega.analysis-report", "format_version": 1, "contract_version": CONTRACT_VERSION,
               "problem_id": problem_id, "problem": graph["problem"],
               "analysis_target": {"key": spec["analysis_target"], "node": graph_node(graph, node_id)},
               "validation": validation, "why": why, "break_it": break_it, "prove_it": prove,
-              "what_if_false": what_if,
+              "what_if_false": what_if, "unasked_questions": unasked_questions,
               "next_actions": [item["attack"] for item in break_it["attack_order"][:3]],
               "audit_events": len(store.list_audit_events(problem_id))}
     return report
@@ -36,7 +37,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     target = report["analysis_target"]["node"]
     lines = [f"# OMEGA Analysis — {report['problem']['title']}", "", f"Target: **{target['statement']}**", "",
              f"- Contract: `{report['contract_version']}`", f"- Graph validation: **{report['validation']['valid']}**",
-             f"- Audit events: `{report['audit_events']}`", "", "## WHY", ""]
+             f"- Audit events: `{report['audit_events']}`", "", "## Unasked questions", ""]
+    lines.extend([f"- {node['statement']}" for node in report["unasked_questions"]] or ["- None"])
+    lines.extend(["", "## WHY", ""])
     for reason in report["why"]["reasons"]:
         lines.append(f"- `{reason['relation']}` — {reason['node']['statement']}")
     if report["why"]["unresolved_gaps"]:
