@@ -7,6 +7,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
+from .evidence import normalize_evidence
+
 NODE_TYPES = {"fact", "assumption", "constraint", "unknown"}
 EDGE_TYPES = {"depends_on", "supports", "contradicts", "relates_to"}
 
@@ -53,7 +55,7 @@ class Store:
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(source_id, target_id, type)
                 );
-                INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','1');
+                INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','2');
             """)
 
     @staticmethod
@@ -92,7 +94,7 @@ class Store:
         nid = self._id("node")
         with self.connect() as db:
             db.execute("INSERT INTO nodes(id,problem_id,type,statement,confidence,evidence) VALUES(?,?,?,?,?,?)",
-                       (nid, problem_id, kind, statement, confidence, json.dumps(evidence or [])))
+                       (nid, problem_id, kind, statement, confidence, json.dumps(normalize_evidence(evidence))))
         return self.get_node(nid)
 
     def get_node(self, node_id: str) -> dict[str, Any]:
@@ -101,7 +103,7 @@ class Store:
         if not row:
             raise KeyError(f"node not found: {node_id}")
         result = dict(row)
-        result["evidence"] = json.loads(result["evidence"])
+        result["evidence"] = normalize_evidence(json.loads(result["evidence"]))
         return result
 
     def add_edge(self, problem_id: str, source_id: str, target_id: str, kind: str) -> dict[str, Any]:
@@ -150,7 +152,7 @@ class Store:
             raise ValueError("invalid status")
         values = (statement if statement is not None else current["statement"],
                   confidence if confidence is not None else current["confidence"],
-                  json.dumps(evidence if evidence is not None else current["evidence"]),
+                  json.dumps(normalize_evidence(evidence) if evidence is not None else current["evidence"]),
                   status if status is not None else current["status"], node_id)
         with self.connect() as db:
             db.execute("UPDATE nodes SET statement=?,confidence=?,evidence=?,status=? WHERE id=?", values)
@@ -162,5 +164,5 @@ class Store:
             nodes = [dict(r) for r in db.execute("SELECT * FROM nodes WHERE problem_id=? ORDER BY created_at,id", (problem_id,))]
             edges = [dict(r) for r in db.execute("SELECT * FROM edges WHERE problem_id=? ORDER BY created_at,id", (problem_id,))]
         for node in nodes:
-            node["evidence"] = json.loads(node["evidence"])
+            node["evidence"] = normalize_evidence(json.loads(node["evidence"]))
         return {"problem": problem, "nodes": nodes, "edges": edges}

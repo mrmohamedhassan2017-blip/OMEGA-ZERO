@@ -16,3 +16,23 @@ BREAK IT ranked the current risks as follows:
 ## Consequence
 
 The next core increment must define a structured evidence contract with provenance and verification state, then introduce reference scenarios for evaluating ranking quality. Adding broader product layers before these tests would hide the two highest-ranked weaknesses rather than resolve them.
+
+## Run 002 — 2026-08-27
+
+The evidence contract is now executable and backward-compatible. Each record contains provenance, observation time, method, reliability, verification state, and a note. BREAK IT reports confidence risk, dependency risk, evidence risk, and evidence strength separately.
+
+The first ranking benchmark contains three executable invariants:
+
+1. Unsupported low-confidence premises rank before reproduced high-confidence premises.
+2. At equal confidence, a shared dependency ranks before an isolated unknown.
+3. Facts are validated or sent to PROVE IT rather than treated as BREAK IT attack targets.
+
+Result: top-1 accuracy `1.0`, mean reciprocal rank `1.0`, 3/3 cases passed.
+
+### Honest interpretation
+
+These fixtures were designed from the intended semantics, so they prevent regression but cannot demonstrate real-world ranking quality. The self-graph therefore moves evidence sufficiency and ranking usefulness to `testing`, not `supported` or `resolved`.
+
+### Next falsification target
+
+Build independently labelled reference problems, measure agreement and ranking quality, and test sensitivity to score weights. Until then, a user must treat BREAK IT as an explainable prioritization suggestion rather than an authoritative answer.

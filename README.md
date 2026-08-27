@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.2 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.3 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -10,6 +10,7 @@ Requires Python 3.11+ and has no third-party runtime dependencies.
 python -m unittest discover -s tests -v
 python -m omega.cli --db data/demo.db demo
 python -m omega.cli --db data/omega-self.db self-audit
+python -m omega.cli benchmark
 python -m omega.api --db data/omega.db --port 8787
 ```
 
@@ -35,6 +36,8 @@ Edge direction is semantic: `A depends_on B` is stored as source `A`, target `B`
 `self-audit` creates an idempotent graph for the claim that OMEGA's own analysis is trustworthy and actionable, then runs validation, WHY, BREAK IT, and PROVE IT against that graph. Its database persists under `data/omega-self.db`.
 
 Current self-audit priority: specify auditable evidence, then validate whether BREAK IT ranking matches useful real-world attack order. See [docs/SELF_AUDIT.md](docs/SELF_AUDIT.md).
+
+Evidence records have a normalized contract: `source`, `observed_at`, `method`, `reliability`, `verification_status`, and `note`. Legacy strings remain readable but are explicitly marked `legacy`. BREAK IT exposes its score components and the calculated evidence strength.
 
 ## V0.x boundary
 

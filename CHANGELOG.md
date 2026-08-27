@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-08-27
+
+- Added a normalized, validated evidence contract with legacy compatibility.
+- Added derived evidence strength and transparent BREAK IT score components.
+- Added an executable ranking benchmark with top-1 accuracy and mean reciprocal rank.
+- Integrated benchmark results into self-audit without overstating synthetic evidence.
+- Expanded the suite from 11 to 16 tests, including HTTP evidence rejection.
+
 ## 0.2.0 — 2026-08-27
 
 - Added idempotent OMEGA self-graph and `self-audit` command.

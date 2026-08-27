@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from typing import Any
 
+from .evidence import evidence_strength
+
 
 class Engine:
     """Deterministic reasoning operations over a Problem/Assumption Graph."""
@@ -39,9 +41,16 @@ class Engine:
             if node["type"] not in {"assumption", "constraint", "unknown"}:
                 continue
             dependents = len([e for e in self.incoming[node["id"]] if e["type"] == "depends_on"])
-            evidence_penalty = 0 if node["evidence"] else 0.25
-            fragility = round((1 - node["confidence"]) * 0.6 + min(dependents, 5) * 0.08 + evidence_penalty, 3)
-            ranked.append({"node": node, "dependents": dependents, "fragility": min(fragility, 1.0),
+            strength = evidence_strength(node["evidence"])
+            confidence_risk = round((1 - node["confidence"]) * 0.55, 3)
+            dependency_risk = round(min(dependents, 5) * 0.08, 3)
+            evidence_risk = round((1 - strength) * 0.25, 3)
+            fragility = round(confidence_risk + dependency_risk + evidence_risk, 3)
+            ranked.append({"node": node, "dependents": dependents, "evidence_strength": strength,
+                           "score_components": {"confidence_risk": confidence_risk,
+                                                "dependency_risk": dependency_risk,
+                                                "evidence_risk": evidence_risk},
+                           "fragility": min(fragility, 1.0),
                            "attack": f"Falsify: {node['statement']}"})
         ranked.sort(key=lambda x: (-x["fragility"], -x["dependents"], x["node"]["id"]))
         return {"operation": "BREAK_IT", "attack_order": ranked}

@@ -5,6 +5,7 @@ from .api import run
 from .engine import Engine
 from .store import Store
 from .self_model import self_audit
+from .benchmark import run_ranking_benchmark
 
 
 def demo(db_path: str) -> None:
@@ -28,11 +29,14 @@ def main() -> None:
     serve = sub.add_parser("serve"); serve.add_argument("--host", default="127.0.0.1"); serve.add_argument("--port", type=int, default=8787)
     sub.add_parser("demo")
     sub.add_parser("self-audit")
+    sub.add_parser("benchmark")
     args = parser.parse_args()
     if args.command == "serve":
         run(args.host, args.port, args.db)
     elif args.command == "self-audit":
         print(json.dumps(self_audit(Store(args.db)), ensure_ascii=False, indent=2))
+    elif args.command == "benchmark":
+        print(json.dumps(run_ranking_benchmark(), ensure_ascii=False, indent=2))
     else:
         demo(args.db)
 

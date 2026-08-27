@@ -4,6 +4,8 @@ from pathlib import Path
 
 from omega.engine import Engine
 from omega.store import Store
+from omega.evidence import evidence_strength, normalize_evidence
+from omega.benchmark import run_ranking_benchmark
 
 
 class CoreTests(unittest.TestCase):
@@ -53,6 +55,25 @@ class CoreTests(unittest.TestCase):
                                          evidence=[{"source": "experiment-1"}], status="resolved")
         self.assertEqual("resolved", updated["status"])
         self.assertEqual("experiment-1", updated["evidence"][0]["source"])
+
+    def test_evidence_contract_normalizes_legacy_records(self):
+        record = normalize_evidence(["old-note"])[0]
+        self.assertEqual("legacy", record["verification_status"])
+        self.assertEqual(0.15, evidence_strength([record]))
+
+    def test_evidence_contract_rejects_bad_reliability(self):
+        with self.assertRaisesRegex(ValueError, "reliability"):
+            normalize_evidence([{"source": "x", "reliability": 2}])
+
+    def test_reproduced_evidence_is_stronger_than_unverified(self):
+        weak = normalize_evidence([{"source": "x", "reliability": 0.9}])
+        strong = normalize_evidence([{"source": "x", "reliability": 0.9, "verification_status": "reproduced"}])
+        self.assertGreater(evidence_strength(strong), evidence_strength(weak))
+
+    def test_break_it_reference_benchmark_passes(self):
+        result = run_ranking_benchmark()
+        self.assertTrue(result["gate_passed"])
+        self.assertEqual(1.0, result["metrics"]["top1_accuracy"])
 
     def test_validation_rejects_fact_without_evidence(self):
         unsupported = self.store.add_node(self.problem["id"], "fact", "Unsupported claim", 0.7)

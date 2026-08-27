@@ -47,6 +47,12 @@ class ApiTests(unittest.TestCase):
         status, data = self.request("POST", "/problems", {})
         self.assertEqual(400, status); self.assertIn("error", data)
 
+    def test_invalid_evidence_is_rejected_over_http(self):
+        _, problem = self.request("POST", "/problems", {"title": "Evidence", "description": "test"})
+        status, data = self.request("POST", f"/problems/{problem['id']}/nodes",
+                                    {"type": "fact", "statement": "Claim", "evidence": [{"reliability": 2}]})
+        self.assertEqual(400, status); self.assertIn("evidence.source", data["error"])
+
 
 if __name__ == "__main__":
     unittest.main()

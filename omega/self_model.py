@@ -4,6 +4,7 @@ from typing import Any
 
 from .engine import Engine
 from .store import Store
+from .benchmark import run_ranking_benchmark
 
 TITLE = "OMEGA Core can produce trustworthy, actionable analysis"
 
@@ -11,6 +12,20 @@ TITLE = "OMEGA Core can produce trustworthy, actionable analysis"
 def ensure_self_graph(store: Store) -> dict[str, Any]:
     existing = store.find_problem(TITLE)
     if existing:
+        graph = store.graph(existing["id"])
+        by_statement = {node["statement"]: node for node in graph["nodes"]}
+        evidence_question = by_statement.get("Which evidence schema is sufficient for auditability?")
+        if evidence_question:
+            store.update_node(evidence_question["id"], confidence=0.45, status="testing", evidence=[{
+                "source": "docs/DECISIONS.md#adr-007--structured-evidence-contract",
+                "observed_at": "2026-08-27", "method": "implemented-contract-review", "reliability": 0.8,
+                "verification_status": "corroborated", "note": "The contract exists; real audit sufficiency remains unproven."}])
+        ranking = by_statement.get("BREAK IT fragility ranking corresponds to useful attack priority")
+        if ranking:
+            store.update_node(ranking["id"], confidence=0.45, status="testing", evidence=[{
+                "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
+                "method": "three-synthetic-invariant-cases", "reliability": 0.55,
+                "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
         return store.graph(existing["id"])
 
     problem = store.create_problem(TITLE, "OMEGA V0.x applies its own reasoning model to its design and claims.")
@@ -20,7 +35,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "types": store.add_node(pid, "assumption", "Four node types capture the distinctions needed by real problems", 0.35),
         "semantics": store.add_node(pid, "constraint", "Every edge type must have one documented direction and meaning", 0.75),
         "ranking": store.add_node(pid, "assumption", "BREAK IT fragility ranking corresponds to useful attack priority", 0.2),
-        "evidence": store.add_node(pid, "unknown", "Which evidence schema is sufficient for auditability?", 0.1),
+        "evidence": store.add_node(pid, "unknown", "Which evidence schema is sufficient for auditability?", 0.45, [{
+            "source": "docs/DECISIONS.md#adr-007--structured-evidence-contract", "observed_at": "2026-08-27",
+            "method": "implemented-contract-review", "reliability": 0.8, "verification_status": "corroborated",
+            "note": "The contract exists; real audit sufficiency remains unproven."}]),
         "tests": store.add_node(pid, "fact", "Core unit tests pass on the current implementation", 0.9,
                                 [{"source": "python -m unittest discover -s tests -v", "observed_at": "2026-08-27"}]),
         "boundary": store.add_node(pid, "constraint", "WOS and Reality Compiler remain excluded until Core stability gates pass", 1.0),
@@ -30,6 +48,11 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         ("goal", "ranking", "depends_on"), ("goal", "evidence", "depends_on"),
         ("goal", "tests", "supports"), ("goal", "boundary", "depends_on")]:
         store.add_edge(pid, nodes[source]["id"], nodes[target]["id"], relation)
+    store.update_node(nodes["evidence"]["id"], status="testing")
+    store.update_node(nodes["ranking"]["id"], confidence=0.45, status="testing", evidence=[{
+        "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
+        "method": "three-synthetic-invariant-cases", "reliability": 0.55,
+        "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
     return store.graph(pid)
 
 
@@ -38,4 +61,5 @@ def self_audit(store: Store) -> dict[str, Any]:
     engine = Engine(graph)
     goal = next(node for node in graph["nodes"] if node["statement"] == "OMEGA analysis is trustworthy and actionable")
     return {"graph": graph, "validation": engine.validate(), "why": engine.why(goal["id"]),
-            "break_it": engine.break_it(), "prove_it": engine.prove_it(goal["id"])}
+            "break_it": engine.break_it(), "prove_it": engine.prove_it(goal["id"]),
+            "ranking_benchmark": run_ranking_benchmark()}
