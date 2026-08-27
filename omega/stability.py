@@ -10,6 +10,9 @@ from .self_model import ensure_self_graph
 from .store import Store
 from .stress import run_concurrency_stress
 from .evaluation import run_protocol_gate
+from .spec import validate_spec
+import json
+from pathlib import Path
 
 
 def run_stability_audit(store: Store) -> dict[str, Any]:
@@ -18,6 +21,11 @@ def run_stability_audit(store: Store) -> dict[str, Any]:
     validation = engine.validate(); benchmarks = run_all_benchmarks(); release = run_release_gates()
     concurrency = run_concurrency_stress()
     evaluation_protocol = run_protocol_gate()
+    example_path = Path(__file__).resolve().parent.parent / "examples" / "launch.problem.json"
+    try:
+        declarative = validate_spec(json.loads(example_path.read_text(encoding="utf-8")))
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        declarative = {"valid": False, "error": str(exc)}
     goal = next(node for node in graph["nodes"] if node["statement"] == "OMEGA analysis is trustworthy and actionable")
     audit_events = store.list_audit_events(graph["problem"]["id"])
     first = {"why": engine.why(goal["id"]), "break_it": engine.break_it(),
@@ -46,7 +54,9 @@ def run_stability_audit(store: Store) -> dict[str, Any]:
         {"gate": "append-only-audit", "passed": bool(audit_events)
                   and [event["sequence"] for event in audit_events] == sorted(event["sequence"] for event in audit_events),
          "evidence": {"events": len(audit_events), "first_action": audit_events[0]["action"] if audit_events else None,
-                      "last_action": audit_events[-1]["action"] if audit_events else None}},
+                     "last_action": audit_events[-1]["action"] if audit_events else None}},
+        {"gate": "declarative-first-use", "passed": declarative.get("valid", False),
+         "evidence": declarative},
     ]
     blockers = [
         "No independently collected user-outcome evidence yet shows that recommendations improve decisions.",

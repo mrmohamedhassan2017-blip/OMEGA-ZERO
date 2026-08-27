@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.9 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.10 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -73,6 +73,8 @@ Imports verify the bundle fingerprint and the complete graph before one transact
 SQLite uses WAL mode and a busy timeout. `stability-audit` launches multiple Python writer processes against one temporary database as one of its gates. See [docs/CORE_STABILITY.md](docs/CORE_STABILITY.md) for what passing currently means and what it does not mean.
 
 Every successful mutation writes an audit event in the same database transaction. Failed transactions write neither state nor event, and no-op updates create no noise. When an older database enables auditing, OMEGA writes an explicit `audit_baseline`; it never invents historical events.
+
+For first use, copy [launch.problem.json](C:/Users/Eng-Mohamed%20Hasan/Documents/Codex/Impossible-Machine-OMEGA/examples/launch.problem.json), edit its statements/evidence, and run `spec-check` followed by `run-spec`. The generated Markdown report is suitable for review before any external blind evaluation.
 
 ## Blind external evaluation
 

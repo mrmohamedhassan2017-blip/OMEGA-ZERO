@@ -126,4 +126,12 @@ Scoring deterministically reruns the prediction, verifies all fingerprints and t
 
 Record every successful problem, node, edge, import, and restore mutation in an append-only `audit_events` table inside the same transaction as the state change. Record before/after data for updates and tombstone details for deletes. Do not emit events for no-op updates.
 
+Bulk import is one logical mutation and therefore records one `imported` event rather than pretending each row was independently created.
+
+## ADR-020 — Declarative first-use workflow
+
+**Status:** Accepted — 2026-08-27
+
+Represent a user problem as a versioned JSON spec with stable node keys and one `analysis_target`. `spec-check` validates it without mutating a database; `run-spec` imports it atomically and produces JSON plus Markdown containing all four operations, validation, and next actions. This keeps the HTTP API available while making the Core usable by a human evaluator.
+
 When schema migration enables auditing on an existing problem, create one `audit_baseline` containing current counts and an explicit statement that earlier mutations were not reconstructed. Audit order uses SQLite row order rather than random event IDs.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 — 2026-08-27
+
+- Added declarative JSON Problem Spec with stable keys and analysis target.
+- Added `spec-check` validation without database mutation.
+- Added `run-spec` CLI producing JSON and Markdown reports for all four operations.
+- Added `POST /specs/analyze` endpoint.
+- Added a launch decision example for first-use and external evaluation preparation.
+- Expanded the suite from 43 to 48 tests.
+
 ## 0.9.0 — 2026-08-27
 
 - Added append-only atomic audit events for all core mutations.

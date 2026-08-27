@@ -1,0 +1,26 @@
+{
+  "format": "omega.problem-spec",
+  "format_version": 1,
+  "problem": {
+    "title": "Should we launch the feature?",
+    "description": "A small product decision prepared for OMEGA analysis."
+  },
+  "analysis_target": "launch",
+  "nodes": [
+    {"key": "launch", "type": "assumption", "role": "prediction", "statement": "The launch will succeed", "confidence": 0.5},
+    {"key": "demand", "type": "unknown", "role": "question", "statement": "Will sufficient demand exist?", "confidence": 0.15},
+    {"key": "budget", "type": "constraint", "role": "limit", "statement": "The launch budget is capped", "confidence": 0.9},
+    {"key": "interviews", "type": "fact", "role": "measurement", "statement": "Eight interviews showed interest", "confidence": 0.85,
+     "evidence": [{"source": "interview-notes", "observed_at": "2026-08-27", "method": "structured-interview",
+                   "reliability": 0.7, "verification_status": "unverified"}]},
+    {"key": "counter", "type": "fact", "role": "observation", "statement": "A prior trial had zero conversions", "confidence": 0.85,
+     "evidence": [{"source": "trial-dashboard", "observed_at": "2026-08-27", "method": "database-query",
+                   "reliability": 0.9, "verification_status": "corroborated"}]}
+  ],
+  "edges": [
+    {"source": "launch", "target": "demand", "type": "depends_on"},
+    {"source": "launch", "target": "budget", "type": "depends_on"},
+    {"source": "interviews", "target": "launch", "type": "supports"},
+    {"source": "counter", "target": "launch", "type": "contradicts"}
+  ]
+}

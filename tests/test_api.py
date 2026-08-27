@@ -89,6 +89,12 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(["created", "created", "created", "created", "updated", "deleted", "deleted"],
                          [event["action"] for event in audit["events"]])
 
+    def test_declarative_spec_analysis_endpoint(self):
+        spec = json.loads((Path(__file__).parents[1] / "examples" / "launch.problem.json").read_text(encoding="utf-8"))
+        status, report = self.request("POST", "/specs/analyze", spec)
+        self.assertEqual(201, status); self.assertTrue(report["validation"]["valid"])
+        self.assertEqual("launch", report["analysis_target"]["key"])
+
 
 if __name__ == "__main__":
     unittest.main()

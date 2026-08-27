@@ -10,6 +10,8 @@ from .benchmark import run_all_benchmarks
 from .release import run_release_gates
 from .stability import run_stability_audit
 from .evaluation import aggregate_records, prepare_blind_case, run_blind_case, score_reveal
+from .spec import validate_spec
+from .report import analyze_spec, render_markdown
 
 
 def _write_new_json(path: str, payload: object) -> Path:
@@ -53,6 +55,9 @@ def main() -> None:
     score = sub.add_parser("eval-score"); score.add_argument("public_case"); score.add_argument("prediction"); score.add_argument("reveal")
     score.add_argument("--out", required=True)
     aggregate = sub.add_parser("eval-aggregate"); aggregate.add_argument("records", nargs="+")
+    spec_check = sub.add_parser("spec-check"); spec_check.add_argument("path")
+    run_spec_cmd = sub.add_parser("run-spec"); run_spec_cmd.add_argument("path"); run_spec_cmd.add_argument("--json-out", required=True)
+    run_spec_cmd.add_argument("--markdown-out")
     args = parser.parse_args()
     if args.command == "serve":
         run(args.host, args.port, args.db)
@@ -99,6 +104,19 @@ def main() -> None:
     elif args.command == "eval-aggregate":
         records = [json.loads(Path(path).read_text(encoding="utf-8")) for path in args.records]
         print(json.dumps(aggregate_records(records), ensure_ascii=False, indent=2))
+    elif args.command == "spec-check":
+        print(json.dumps(validate_spec(json.loads(Path(args.path).read_text(encoding="utf-8"))), ensure_ascii=False, indent=2))
+    elif args.command == "run-spec":
+        report = analyze_spec(Store(args.db), json.loads(Path(args.path).read_text(encoding="utf-8")))
+        output = _write_new_json(args.json_out, report)
+        markdown_path = None
+        if args.markdown_out:
+            markdown_path = Path(args.markdown_out)
+            if markdown_path.exists():
+                raise FileExistsError(f"refusing to overwrite report: {markdown_path}")
+            markdown_path.parent.mkdir(parents=True, exist_ok=True); markdown_path.write_text(render_markdown(report), encoding="utf-8")
+        print(json.dumps({"json_report": str(output), "markdown_report": str(markdown_path.resolve()) if markdown_path else None,
+                          "problem_id": report["problem_id"]}, indent=2))
     else:
         demo(args.db)
 

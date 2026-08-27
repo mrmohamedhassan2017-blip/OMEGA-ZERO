@@ -8,7 +8,7 @@ python -m omega.cli --db data/omega-self.db stability-audit
 
 ## V0.7 result
 
-OMEGA passes all 10 internal Core-candidate gates:
+OMEGA passes all 11 internal Core-candidate gates:
 
 1. SQLite integrity and schema version.
 2. Valid persistent self-graph.
@@ -20,8 +20,9 @@ OMEGA passes all 10 internal Core-candidate gates:
 8. Multi-process writes: four Python processes create 32 problems and nodes with no loss, duplication, lock failure, or integrity error.
 9. Blind-evaluation protocol: public cases contain no labels, committed reveals verify, and modified reveals are rejected.
 10. Append-only mutation audit: events exist, remain ordered, and mutation/audit writes share a transaction.
+11. Declarative first-use: the checked-in example validates without mutating the audit database.
 
-The normal test suite independently contains 43 passing tests.
+The normal test suite independently contains 48 passing tests.
 
 ## Maturity decision
 

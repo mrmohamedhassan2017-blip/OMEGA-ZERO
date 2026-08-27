@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from .engine import Engine
 from .store import Store
 from . import __version__
+from .report import analyze_spec
 
 
 def make_handler(store: Store):
@@ -49,6 +50,8 @@ def make_handler(store: Store):
                     return self._send(201, store.create_problem(data["title"], data.get("description", "")))
                 if parts == ["imports"]:
                     return self._send(201, store.import_problem(data))
+                if parts == ["specs", "analyze"]:
+                    return self._send(201, analyze_spec(store, data))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "nodes":
                     return self._send(201, store.add_node(parts[1], data["type"], data["statement"],
                                                            data.get("confidence", 0.5), data.get("evidence"), data.get("role")))
@@ -101,7 +104,7 @@ def make_handler(store: Store):
 
 def run(host: str = "127.0.0.1", port: int = 8787, db: str = "data/omega.db") -> None:
     server = ThreadingHTTPServer((host, port), make_handler(Store(db)))
-    print(f"OMEGA v0.1 listening on http://{host}:{port}")
+    print(f"OMEGA {__version__} listening on http://{host}:{port}")
     server.serve_forever()
 
 

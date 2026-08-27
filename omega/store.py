@@ -373,7 +373,7 @@ class Store:
             self._record_event(db, problem_id, "problem", problem_id, "imported",
                                {"bundle_sha256": bundle["sha256"], "nodes": len(prepared), "edges": len(raw_edges)})
         return {"problem_id": problem_id, "nodes_imported": len(prepared), "edges_imported": len(raw_edges),
-                "sha256": bundle["sha256"]}
+                "node_map": node_ids, "sha256": bundle["sha256"]}
 
     @staticmethod
     def _assert_acyclic(adjacency: dict[str, list[str]]) -> None:

@@ -133,6 +133,24 @@ For the existing self database, migration wrote `audit_baseline` rather than fab
 
 The evidence-auditability Unknown moved from confidence 0.45 to 0.75. It is no longer among the three highest BREAK IT targets. The external-agreement Unknown remains first at fragility 0.825, exactly as required.
 
+## Run 009 — 2026-08-27
+
+First-use usability is now executable through `examples/launch.problem.json`. `spec-check` validates five typed nodes and four relationships without database mutation. `run-spec` imports the spec as one atomic operation and creates a reviewable Markdown report containing WHY, BREAK IT, PROVE IT, WHAT IF, validation, and next actions. The same flow is available at `POST /specs/analyze`.
+
+The workflow was exercised end-to-end through the CLI and API tests. It produced a valid target report and one auditable `imported` event. The suite now contains 48 passing tests.
+
+## Run 010 — 2026-08-27
+
+The declarative first-use example was promoted into the stability audit. The audit now passes 11/11 internal gates, including database integrity, self-graph validity, benchmarks, portability/recovery, deterministic operations, scope boundary, contract version, multi-process writes, blind protocol, append-only audit, and spec validation. The suite remains green at 48 tests.
+
+### Honest interpretation
+
+The report makes OMEGA easier to evaluate; it does not turn an internally authored example into external evidence. The “DNA KEY” remains a hypothesis about useful structure, not a discovered universal key.
+
+### Next falsification target
+
+Use this workflow with a real problem supplied by an independent evaluator, then run the blinded protocol without exposing the private reveal. Only that can move the external-agreement Unknown.
+
 ### Honest interpretation
 
 The audit log proves what this local database recorded after audit enablement. It does not authenticate the human making a request, sign events, or guarantee an external evidence source is truthful.
