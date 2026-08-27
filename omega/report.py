@@ -6,6 +6,7 @@ from .contracts import CONTRACT_VERSION
 from .engine import Engine
 from .spec import run_spec
 from .store import Store
+from .impossibility import build_impossibility_map
 
 
 def analyze_spec(store: Store, spec: dict[str, Any]) -> dict[str, Any]:
@@ -21,6 +22,7 @@ def analyze_spec(store: Store, spec: dict[str, Any]) -> dict[str, Any]:
               "analysis_target": {"key": spec["analysis_target"], "node": graph_node(graph, node_id)},
               "validation": validation, "why": why, "break_it": break_it, "prove_it": prove,
               "what_if_false": what_if, "unasked_questions": unasked_questions,
+              "impossibility_map": build_impossibility_map(graph, node_id),
               "next_actions": [item["attack"] for item in break_it["attack_order"][:3]],
               "audit_events": len(store.list_audit_events(problem_id))}
     return report

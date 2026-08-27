@@ -28,6 +28,8 @@ class SpecTests(unittest.TestCase):
         self.assertEqual("launch", report["analysis_target"]["key"])
         self.assertIn("test_plan", report["prove_it"])
         self.assertTrue(report["unasked_questions"])
+        self.assertIn("impossibility_score", report["impossibility_map"])
+        self.assertTrue(report["impossibility_map"]["blockers"])
         self.assertEqual(1, report["audit_events"])
         markdown = render_markdown(report)
         self.assertIn("## WHY", markdown); self.assertIn("## BREAK IT", markdown)
