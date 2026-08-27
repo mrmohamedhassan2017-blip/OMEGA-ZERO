@@ -1,0 +1,11 @@
+[project]
+name = "impossible-machine-omega"
+version = "0.2.0"
+description = "A local-first engine for exposing and testing hidden assumptions."
+requires-python = ">=3.11"
+
+[project.scripts]
+omega = "omega.cli:main"
+
+[tool.unittest]
+start-directory = "tests"
