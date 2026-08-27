@@ -108,3 +108,19 @@ Current result: 8/8 internal Core-candidate gates pass and 34 tests pass.
 ### Next falsification target
 
 Create a reproducible external-evaluation protocol and an importable evaluation-record format. OMEGA can then accept blinded labels and outcomes without changing the scorer after seeing them.
+
+## Run 007 — 2026-08-27
+
+OMEGA now supports a complete blind-evaluation file workflow: prepare, run, reveal/score, and aggregate. Labels and evaluator references are hidden from the public case behind a salted commitment. Prediction is deterministically replayed during scoring. Changes to labels, case, or prediction fail verification, and duplicate result IDs fail aggregation.
+
+The protocol gate passes, the stability audit is 9/9, and the suite contains 40 passing tests.
+
+OMEGA also added the unanswered external claim to its own graph: **“Do independent evaluators agree that OMEGA priorities are useful?”** It is an Unknown with confidence 0.10 and a dependency of the overall trustworthiness claim. It should remain the highest BREAK IT target until real external records arrive.
+
+### Honest interpretation
+
+The machinery for honest evidence now exists, but the evidence itself does not. A self-generated successful protocol test proves integrity behavior, not independent agreement or improved outcomes.
+
+### Next falsification target
+
+Exercise the documented workflow on a genuinely external problem without exposing the private reveal before prediction. Until such records exist, keep V1.0 false and improve only internal usability issues that do not pretend to remove this blocker.

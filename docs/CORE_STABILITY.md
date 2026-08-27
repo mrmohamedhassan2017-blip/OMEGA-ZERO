@@ -8,7 +8,7 @@ python -m omega.cli --db data/omega-self.db stability-audit
 
 ## V0.7 result
 
-OMEGA passes all 8 internal Core-candidate gates:
+OMEGA passes all 9 internal Core-candidate gates:
 
 1. SQLite integrity and schema version.
 2. Valid persistent self-graph.
@@ -18,8 +18,9 @@ OMEGA passes all 8 internal Core-candidate gates:
 6. Explicit exclusion of WOS and Reality Compiler.
 7. Operation contract version consistency.
 8. Multi-process writes: four Python processes create 32 problems and nodes with no loss, duplication, lock failure, or integrity error.
+9. Blind-evaluation protocol: public cases contain no labels, committed reveals verify, and modified reveals are rejected.
 
-The normal test suite independently contains 34 passing tests.
+The normal test suite independently contains 40 passing tests.
 
 ## Maturity decision
 
@@ -30,6 +31,6 @@ The normal test suite independently contains 34 passing tests.
 V1.0 remains blocked by evidence, not a known internal test failure:
 
 - No independently collected user-outcome evidence shows that OMEGA recommendations improve a real decision.
-- Ranking labels are stored separately from implementation, but were still authored inside this project.
+- No verified blinded result from an external evaluator has been supplied yet.
 
-These are not replaced by adding more self-authored green tests. A future external evaluation must record the problem before analysis, independent expected priorities, OMEGA output, user judgment, and whether the chosen experiment changed the decision.
+These are not replaced by adding more self-authored green tests. The protocol and file formats now exist; a future external evaluation must record the problem before analysis, committed independent priorities, OMEGA output, user judgment, and whether the chosen experiment changed the decision.

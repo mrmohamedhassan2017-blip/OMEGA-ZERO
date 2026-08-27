@@ -15,6 +15,14 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
     if existing:
         graph = store.graph(existing["id"])
         by_statement = {node["statement"]: node for node in graph["nodes"]}
+        external_statement = "Do independent evaluators agree that OMEGA priorities are useful?"
+        if external_statement not in by_statement:
+            external = store.add_node(existing["id"], "unknown", external_statement, 0.1, role="question")
+            goal_node = by_statement.get("OMEGA analysis is trustworthy and actionable")
+            if goal_node:
+                store.add_edge(existing["id"], goal_node["id"], external["id"], "depends_on")
+            graph = store.graph(existing["id"])
+            by_statement = {node["statement"]: node for node in graph["nodes"]}
         evidence_question = by_statement.get("Which evidence schema is sufficient for auditability?")
         if evidence_question:
             store.update_node(evidence_question["id"], confidence=0.45, status="testing", evidence=[{
@@ -61,11 +69,14 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "tests": store.add_node(pid, "fact", "Core unit tests pass on the current implementation", 0.9,
                                 [{"source": "python -m unittest discover -s tests -v", "observed_at": "2026-08-27"}]),
         "boundary": store.add_node(pid, "constraint", "WOS and Reality Compiler remain excluded until Core stability gates pass", 1.0),
+        "external": store.add_node(pid, "unknown", "Do independent evaluators agree that OMEGA priorities are useful?", 0.1,
+                                   role="question"),
     }
     for source, target, relation in [
         ("goal", "types", "depends_on"), ("goal", "semantics", "depends_on"),
         ("goal", "ranking", "depends_on"), ("goal", "evidence", "depends_on"),
-        ("tests", "goal", "supports"), ("goal", "boundary", "depends_on")]:
+        ("tests", "goal", "supports"), ("goal", "boundary", "depends_on"),
+        ("goal", "external", "depends_on")]:
         store.add_edge(pid, nodes[source]["id"], nodes[target]["id"], relation)
     store.update_node(nodes["evidence"]["id"], status="testing")
     store.update_node(nodes["ranking"]["id"], confidence=0.65, status="testing", evidence=[{

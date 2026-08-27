@@ -9,6 +9,16 @@ from .self_model import self_audit
 from .benchmark import run_all_benchmarks
 from .release import run_release_gates
 from .stability import run_stability_audit
+from .evaluation import aggregate_records, prepare_blind_case, run_blind_case, score_reveal
+
+
+def _write_new_json(path: str, payload: object) -> Path:
+    destination = Path(path)
+    if destination.exists():
+        raise FileExistsError(f"refusing to overwrite existing evaluation file: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return destination.resolve()
 
 
 def demo(db_path: str) -> None:
@@ -37,6 +47,12 @@ def main() -> None:
     import_cmd = sub.add_parser("import"); import_cmd.add_argument("path")
     backup = sub.add_parser("backup"); backup.add_argument("path")
     restore = sub.add_parser("restore"); restore.add_argument("path")
+    prepare = sub.add_parser("eval-prepare"); prepare.add_argument("bundle"); prepare.add_argument("labels")
+    prepare.add_argument("--public-out", required=True); prepare.add_argument("--reveal-out", required=True)
+    eval_run = sub.add_parser("eval-run"); eval_run.add_argument("public_case"); eval_run.add_argument("--out", required=True)
+    score = sub.add_parser("eval-score"); score.add_argument("public_case"); score.add_argument("prediction"); score.add_argument("reveal")
+    score.add_argument("--out", required=True)
+    aggregate = sub.add_parser("eval-aggregate"); aggregate.add_argument("records", nargs="+")
     args = parser.parse_args()
     if args.command == "serve":
         run(args.host, args.port, args.db)
@@ -58,6 +74,31 @@ def main() -> None:
         print(json.dumps(Store(args.db).backup_to(args.path), indent=2))
     elif args.command == "restore":
         print(json.dumps(Store(args.db).restore_from(args.path), indent=2))
+    elif args.command == "eval-prepare":
+        if Path(args.public_out).resolve() == Path(args.reveal_out).resolve():
+            raise ValueError("public and private reveal paths must be different")
+        if Path(args.public_out).exists() or Path(args.reveal_out).exists():
+            raise FileExistsError("refusing to overwrite an existing public or private evaluation file")
+        prepared = prepare_blind_case(json.loads(Path(args.bundle).read_text(encoding="utf-8")),
+                                      json.loads(Path(args.labels).read_text(encoding="utf-8")))
+        public_path = _write_new_json(args.public_out, prepared["public_case"])
+        reveal_path = _write_new_json(args.reveal_out, prepared["private_reveal"])
+        print(json.dumps({"public_case": str(public_path),
+                          "private_reveal": str(reveal_path),
+                          "case_sha256": prepared["public_case"]["case_sha256"]}, indent=2))
+    elif args.command == "eval-run":
+        prediction = run_blind_case(json.loads(Path(args.public_case).read_text(encoding="utf-8")))
+        output_path = _write_new_json(args.out, prediction)
+        print(json.dumps({"prediction": str(output_path),
+                          "prediction_sha256": prediction["prediction_sha256"]}, indent=2))
+    elif args.command == "eval-score":
+        record = score_reveal(*[json.loads(Path(path).read_text(encoding="utf-8"))
+                                for path in (args.public_case, args.prediction, args.reveal)])
+        output_path = _write_new_json(args.out, record)
+        print(json.dumps({"result": str(output_path), "metrics": record["metrics"]}, indent=2))
+    elif args.command == "eval-aggregate":
+        records = [json.loads(Path(path).read_text(encoding="utf-8")) for path in args.records]
+        print(json.dumps(aggregate_records(records), ensure_ascii=False, indent=2))
     else:
         demo(args.db)
 

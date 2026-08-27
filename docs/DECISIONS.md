@@ -111,3 +111,11 @@ Robustness across these profiles reduces weight sensitivity risk but does not re
 **Status:** Accepted — 2026-08-27
 
 Use SQLite WAL mode and a 10-second busy timeout. The stability gate runs four independent Python writer processes and verifies exact problem/node counts plus database integrity. This supports local concurrent writers; it is not a distributed database guarantee.
+
+## ADR-018 — Commit labels before blind evaluation
+
+**Status:** Accepted — 2026-08-27
+
+External ranking evaluation uses a public case and private reveal. Before prediction, SHA-256 commits to a random salt, evaluation ID, problem fingerprint, evaluator reference, and expected order. The public case locks the balanced-v1 scoring profile but contains none of the private fields.
+
+Scoring deterministically reruns the prediction, verifies all fingerprints and the reveal commitment, and creates an immutable result record. This prevents unnoticed post-result relabelling; it does not authenticate evaluator identity or prove independence.

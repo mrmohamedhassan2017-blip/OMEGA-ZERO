@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.7 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.8 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -67,6 +67,20 @@ python -m omega.cli --db data/omega.db restore backups/omega.db
 Imports verify the bundle fingerprint and the complete graph before one transaction writes anything. Exceptions roll transactions back. `release-check` verifies deterministic export, semantic round-trip, imported graph validity, atomic tamper rejection, and backup restoration.
 
 SQLite uses WAL mode and a busy timeout. `stability-audit` launches multiple Python writer processes against one temporary database as one of its gates. See [docs/CORE_STABILITY.md](docs/CORE_STABILITY.md) for what passing currently means and what it does not mean.
+
+## Blind external evaluation
+
+The evaluator must choose `expected_order` before OMEGA runs. Preparation creates a public case containing only a cryptographic commitment and a private reveal containing the labels and random salt.
+
+```powershell
+python -m omega.cli --db data/omega.db export PROBLEM_ID --out case.bundle.json
+python -m omega.cli eval-prepare case.bundle.json labels.json --public-out public.json --reveal-out private-reveal.json
+python -m omega.cli eval-run public.json --out prediction.json
+python -m omega.cli eval-score public.json prediction.json private-reveal.json --out result.json
+python -m omega.cli eval-aggregate result-1.json result-2.json
+```
+
+Do not give `private-reveal.json` to the system running `eval-run`. Modification of the case, prediction, or reveal is rejected. See [docs/EVALUATION_PROTOCOL.md](docs/EVALUATION_PROTOCOL.md).
 
 ## V0.x boundary
 
