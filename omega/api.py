@@ -35,6 +35,8 @@ def make_handler(store: Store):
                     return self._send(200, store.graph(parts[1]))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "export":
                     return self._send(200, store.export_problem(parts[1]))
+                if len(parts) == 3 and parts[0] == "problems" and parts[2] == "audit":
+                    return self._send(200, {"events": store.list_audit_events(parts[1])})
                 self._send(404, {"error": "route not found"})
             except KeyError as exc:
                 self._send(404, {"error": str(exc)})
@@ -70,6 +72,10 @@ def make_handler(store: Store):
             try:
                 if len(parts) == 2 and parts[0] == "problems":
                     return self._send(200, store.delete_problem(parts[1]))
+                if len(parts) == 2 and parts[0] == "nodes":
+                    return self._send(200, store.delete_node(parts[1]))
+                if len(parts) == 2 and parts[0] == "edges":
+                    return self._send(200, store.delete_edge(parts[1]))
                 self._send(404, {"error": "route not found"})
             except KeyError as exc:
                 self._send(404, {"error": str(exc)})
@@ -78,6 +84,9 @@ def make_handler(store: Store):
             parts = urlparse(self.path).path.strip("/").split("/")
             try:
                 data = self._body()
+                if len(parts) == 2 and parts[0] == "problems":
+                    allowed = {key: data[key] for key in ("title", "description") if key in data}
+                    return self._send(200, store.update_problem(parts[1], **allowed))
                 if len(parts) == 2 and parts[0] == "nodes":
                     allowed = {key: data[key] for key in ("statement", "confidence", "evidence", "status", "role") if key in data}
                     return self._send(200, store.update_node(parts[1], **allowed))

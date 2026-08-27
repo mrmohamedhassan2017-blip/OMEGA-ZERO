@@ -12,7 +12,7 @@ class StabilityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             result = run_stability_audit(Store(Path(tmp) / "audit.db"))
         self.assertTrue(result["core_candidate_passed"])
-        self.assertEqual({"passed": 9, "total": 9}, result["summary"])
+        self.assertEqual({"passed": 10, "total": 10}, result["summary"])
         self.assertFalse(result["ready_for_v1"])
         self.assertGreaterEqual(len(result["v1_blockers"]), 1)
 

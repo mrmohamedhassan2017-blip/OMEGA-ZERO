@@ -63,6 +63,13 @@ class Store:
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(source_id, target_id, type)
                 );
+                CREATE TABLE IF NOT EXISTS audit_events (
+                    id TEXT PRIMARY KEY, problem_id TEXT, entity_type TEXT NOT NULL,
+                    entity_id TEXT, action TEXT NOT NULL, payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_audit_problem_created
+                    ON audit_events(problem_id, created_at, id);
             """)
             version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
             previous_version = int(version_row[0]) if version_row else None
@@ -74,16 +81,34 @@ class Store:
                     SELECT 1 FROM edges AS other WHERE other.type='supports'
                     AND other.source_id=old.target_id AND other.target_id=old.source_id AND other.id < old.id)""")
                 db.execute("UPDATE edges SET source_id=target_id, target_id=source_id WHERE type='supports'")
-            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','4')")
+            if previous_version is not None and previous_version < 5:
+                for problem in db.execute("SELECT id,title FROM problems").fetchall():
+                    node_count = db.execute("SELECT COUNT(*) FROM nodes WHERE problem_id=?", (problem["id"],)).fetchone()[0]
+                    edge_count = db.execute("SELECT COUNT(*) FROM edges WHERE problem_id=?", (problem["id"],)).fetchone()[0]
+                    self._record_event(db, problem["id"], "problem", problem["id"], "audit_baseline",
+                                       {"title": problem["title"], "nodes_at_enablement": node_count,
+                                        "edges_at_enablement": edge_count,
+                                        "note": "Audit logging starts here; earlier mutations are not reconstructed."})
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','5')")
 
     @staticmethod
     def _id(prefix: str) -> str:
         return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
+    def _record_event(self, db: sqlite3.Connection, problem_id: str | None, entity_type: str,
+                      entity_id: str | None, action: str, payload: dict[str, Any]) -> None:
+        db.execute("INSERT INTO audit_events(id,problem_id,entity_type,entity_id,action,payload) VALUES(?,?,?,?,?,?)",
+                   (self._id("evt"), problem_id, entity_type, entity_id, action,
+                    json.dumps(payload, ensure_ascii=False, sort_keys=True)))
+
     def create_problem(self, title: str, description: str) -> dict[str, Any]:
+        title = str(title).strip()
+        if not title:
+            raise ValueError("problem title is required")
         pid = self._id("prb")
         with self.connect() as db:
             db.execute("INSERT INTO problems(id,title,description) VALUES(?,?,?)", (pid, title, description))
+            self._record_event(db, pid, "problem", pid, "created", {"title": title, "description": description})
         return self.get_problem(pid)
 
     def get_problem(self, problem_id: str) -> dict[str, Any]:
@@ -102,9 +127,29 @@ class Store:
             row = db.execute("SELECT * FROM problems WHERE title=? ORDER BY created_at LIMIT 1", (title,)).fetchone()
         return dict(row) if row else None
 
+    def update_problem(self, problem_id: str, *, title: str | None = None,
+                       description: str | None = None) -> dict[str, Any]:
+        current = self.get_problem(problem_id)
+        selected_title = str(title).strip() if title is not None else current["title"]
+        if not selected_title:
+            raise ValueError("problem title is required")
+        selected_description = str(description) if description is not None else current["description"]
+        if selected_title == current["title"] and selected_description == current["description"]:
+            return current
+        with self.connect() as db:
+            db.execute("UPDATE problems SET title=?,description=? WHERE id=?",
+                       (selected_title, selected_description, problem_id))
+            self._record_event(db, problem_id, "problem", problem_id, "updated",
+                               {"before": {"title": current["title"], "description": current["description"]},
+                                "after": {"title": selected_title, "description": selected_description}})
+        return self.get_problem(problem_id)
+
     def delete_problem(self, problem_id: str) -> dict[str, Any]:
         graph = self.graph(problem_id)
         with self.connect() as db:
+            self._record_event(db, problem_id, "problem", problem_id, "deleted",
+                               {"title": graph["problem"]["title"], "nodes": len(graph["nodes"]),
+                                "edges": len(graph["edges"])})
             db.execute("DELETE FROM problems WHERE id=?", (problem_id,))
         return {"deleted": True, "problem_id": problem_id, "nodes_deleted": len(graph["nodes"]),
                 "edges_deleted": len(graph["edges"])}
@@ -121,6 +166,8 @@ class Store:
         with self.connect() as db:
             db.execute("INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence) VALUES(?,?,?,?,?,?,?)",
                        (nid, problem_id, kind, role, statement, confidence, json.dumps(normalize_evidence(evidence))))
+            self._record_event(db, problem_id, "node", nid, "created",
+                               {"type": kind, "role": role, "statement": statement, "confidence": confidence})
         return self.get_node(nid)
 
     def get_node(self, node_id: str) -> dict[str, Any]:
@@ -132,6 +179,16 @@ class Store:
         result["role"] = normalize_role(result["type"], result.get("role"))
         result["evidence"] = normalize_evidence(json.loads(result["evidence"]))
         return result
+
+    def delete_node(self, node_id: str) -> dict[str, Any]:
+        node = self.get_node(node_id)
+        with self.connect() as db:
+            edge_count = db.execute("SELECT COUNT(*) FROM edges WHERE source_id=? OR target_id=?",
+                                    (node_id, node_id)).fetchone()[0]
+            self._record_event(db, node["problem_id"], "node", node_id, "deleted",
+                               {"node": node, "edges_deleted": edge_count})
+            db.execute("DELETE FROM nodes WHERE id=?", (node_id,))
+        return {"deleted": True, "node_id": node_id, "edges_deleted": edge_count}
 
     def add_edge(self, problem_id: str, source_id: str, target_id: str, kind: str) -> dict[str, Any]:
         if kind not in EDGE_TYPES:
@@ -148,9 +205,25 @@ class Store:
             with self.connect() as db:
                 db.execute("INSERT INTO edges(id,problem_id,source_id,target_id,type) VALUES(?,?,?,?,?)",
                            (eid, problem_id, source_id, target_id, kind))
+                self._record_event(db, problem_id, "edge", eid, "created",
+                                   {"source_id": source_id, "target_id": target_id, "type": kind})
         except sqlite3.IntegrityError as exc:
             raise ValueError("edge already exists or violates graph integrity") from exc
         return {"id": eid, "problem_id": problem_id, "source_id": source_id, "target_id": target_id, "type": kind}
+
+    def get_edge(self, edge_id: str) -> dict[str, Any]:
+        with self.connect() as db:
+            row = db.execute("SELECT * FROM edges WHERE id=?", (edge_id,)).fetchone()
+        if not row:
+            raise KeyError(f"edge not found: {edge_id}")
+        return dict(row)
+
+    def delete_edge(self, edge_id: str) -> dict[str, Any]:
+        edge = self.get_edge(edge_id)
+        with self.connect() as db:
+            self._record_event(db, edge["problem_id"], "edge", edge_id, "deleted", {"edge": edge})
+            db.execute("DELETE FROM edges WHERE id=?", (edge_id,))
+        return {"deleted": True, "edge_id": edge_id}
 
     def _would_create_dependency_cycle(self, problem_id: str, source_id: str, target_id: str) -> bool:
         """A -> B is invalid when B already reaches A through depends_on edges."""
@@ -179,13 +252,31 @@ class Store:
         if status is not None and status not in {"open", "testing", "supported", "falsified", "resolved"}:
             raise ValueError("invalid status")
         selected_role = normalize_role(current["type"], role if role is not None else current["role"])
-        values = (selected_role, statement if statement is not None else current["statement"],
-                  confidence if confidence is not None else current["confidence"],
-                  json.dumps(normalize_evidence(evidence) if evidence is not None else current["evidence"]),
-                  status if status is not None else current["status"], node_id)
+        selected = {"role": selected_role, "statement": statement if statement is not None else current["statement"],
+                    "confidence": confidence if confidence is not None else current["confidence"],
+                    "evidence": normalize_evidence(evidence) if evidence is not None else current["evidence"],
+                    "status": status if status is not None else current["status"]}
+        before = {key: current[key] for key in selected}
+        if selected == before:
+            return current
+        values = (selected["role"], selected["statement"], selected["confidence"],
+                  json.dumps(selected["evidence"]), selected["status"], node_id)
         with self.connect() as db:
             db.execute("UPDATE nodes SET role=?,statement=?,confidence=?,evidence=?,status=? WHERE id=?", values)
+            self._record_event(db, current["problem_id"], "node", node_id, "updated",
+                               {"before": before, "after": selected})
         return self.get_node(node_id)
+
+    def list_audit_events(self, problem_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        if not 1 <= limit <= 1000:
+            raise ValueError("audit limit must be between 1 and 1000")
+        with self.connect() as db:
+            rows = db.execute("SELECT rowid AS sequence,* FROM audit_events WHERE problem_id=? ORDER BY rowid LIMIT ?",
+                              (problem_id, limit)).fetchall()
+        events = [dict(row) for row in rows]
+        for event in events:
+            event["payload"] = json.loads(event["payload"])
+        return events
 
     def graph(self, problem_id: str) -> dict[str, Any]:
         problem = self.get_problem(problem_id)
@@ -279,6 +370,8 @@ class Store:
             for edge in raw_edges:
                 db.execute("INSERT INTO edges(id,problem_id,source_id,target_id,type) VALUES(?,?,?,?,?)",
                            (self._id("edge"), problem_id, node_ids[edge["source"]], node_ids[edge["target"]], edge["type"]))
+            self._record_event(db, problem_id, "problem", problem_id, "imported",
+                               {"bundle_sha256": bundle["sha256"], "nodes": len(prepared), "edges": len(raw_edges)})
         return {"problem_id": problem_id, "nodes_imported": len(prepared), "edges_imported": len(raw_edges),
                 "sha256": bundle["sha256"]}
 
@@ -328,6 +421,9 @@ class Store:
         finally:
             target_db.close(); source_db.close()
         self._init_schema()
+        with self.connect() as db:
+            self._record_event(db, None, "database", None, "restored",
+                               {"source": str(source_path.resolve())})
         return {"restored": True, "source": str(source_path.resolve()), "problems": len(self.list_problems())}
 
     def database_health(self) -> dict[str, Any]:
@@ -335,7 +431,7 @@ class Store:
             quick_check = db.execute("PRAGMA quick_check").fetchone()[0]
             version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
             counts = {table: db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-                      for table in ("problems", "nodes", "edges")}
+                      for table in ("problems", "nodes", "edges", "audit_events")}
         return {"healthy": quick_check == "ok" and version_row is not None,
                 "quick_check": quick_check, "schema_version": int(version_row[0]) if version_row else None,
                 "counts": counts}

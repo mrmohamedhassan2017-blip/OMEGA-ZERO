@@ -72,6 +72,23 @@ class ApiTests(unittest.TestCase):
         status, _ = self.request("GET", f"/problems/{problem['id']}/graph")
         self.assertEqual(404, status)
 
+    def test_update_delete_and_audit_lifecycle(self):
+        _, problem = self.request("POST", "/problems", {"title": "Audit API", "description": "before"})
+        _, left = self.request("POST", f"/problems/{problem['id']}/nodes",
+                               {"type": "assumption", "statement": "Left"})
+        _, right = self.request("POST", f"/problems/{problem['id']}/nodes",
+                                {"type": "unknown", "statement": "Right"})
+        _, edge = self.request("POST", f"/problems/{problem['id']}/edges",
+                               {"source_id": left["id"], "target_id": right["id"], "type": "depends_on"})
+        status, updated = self.request("PATCH", f"/problems/{problem['id']}", {"description": "after"})
+        self.assertEqual(200, status); self.assertEqual("after", updated["description"])
+        self.assertEqual(200, self.request("DELETE", f"/edges/{edge['id']}")[0])
+        self.assertEqual(200, self.request("DELETE", f"/nodes/{right['id']}")[0])
+        status, audit = self.request("GET", f"/problems/{problem['id']}/audit")
+        self.assertEqual(200, status)
+        self.assertEqual(["created", "created", "created", "created", "updated", "deleted", "deleted"],
+                         [event["action"] for event in audit["events"]])
+
 
 if __name__ == "__main__":
     unittest.main()

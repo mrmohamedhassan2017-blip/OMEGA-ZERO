@@ -27,6 +27,8 @@ class PortabilityTests(unittest.TestCase):
         imported = target.import_problem(bundle)
         self.assertEqual(bundle, target.export_problem(imported["problem_id"]))
         self.assertTrue(Engine(target.graph(imported["problem_id"])).validate()["valid"])
+        events = target.list_audit_events(imported["problem_id"])
+        self.assertEqual(["imported"], [event["action"] for event in events])
 
     def test_tampered_bundle_is_rejected_without_partial_problem(self):
         bundle = self.store.export_problem(self.problem["id"]); bundle["payload"]["problem"]["title"] = "Tampered"

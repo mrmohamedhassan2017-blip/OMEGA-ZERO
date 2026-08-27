@@ -19,13 +19,14 @@ def run_stability_audit(store: Store) -> dict[str, Any]:
     concurrency = run_concurrency_stress()
     evaluation_protocol = run_protocol_gate()
     goal = next(node for node in graph["nodes"] if node["statement"] == "OMEGA analysis is trustworthy and actionable")
+    audit_events = store.list_audit_events(graph["problem"]["id"])
     first = {"why": engine.why(goal["id"]), "break_it": engine.break_it(),
              "prove_it": engine.prove_it(goal["id"]), "what_if": engine.what_if(goal["id"], False)}
     second = {"why": engine.why(goal["id"]), "break_it": engine.break_it(),
               "prove_it": engine.prove_it(goal["id"]), "what_if": engine.what_if(goal["id"], False)}
     boundary_present = any("WOS and Reality Compiler remain excluded" in node["statement"] for node in graph["nodes"])
     gates = [
-        {"gate": "database-integrity", "passed": health["healthy"] and health["schema_version"] == 4, "evidence": health},
+        {"gate": "database-integrity", "passed": health["healthy"] and health["schema_version"] == 5, "evidence": health},
         {"gate": "self-graph-valid", "passed": validation["valid"], "evidence": validation["summary"]},
         {"gate": "benchmarks", "passed": benchmarks["gate_passed"],
          "evidence": {"ranking": benchmarks["ranking"]["gate_passed"],
@@ -42,6 +43,10 @@ def run_stability_audit(store: Store) -> dict[str, Any]:
                       "database": concurrency["database"]}},
         {"gate": "blind-evaluation-protocol", "passed": evaluation_protocol["passed"],
          "evidence": evaluation_protocol},
+        {"gate": "append-only-audit", "passed": bool(audit_events)
+                  and [event["sequence"] for event in audit_events] == sorted(event["sequence"] for event in audit_events),
+         "evidence": {"events": len(audit_events), "first_action": audit_events[0]["action"] if audit_events else None,
+                      "last_action": audit_events[-1]["action"] if audit_events else None}},
     ]
     blockers = [
         "No independently collected user-outcome evidence yet shows that recommendations improve decisions.",

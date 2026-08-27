@@ -119,3 +119,11 @@ Use SQLite WAL mode and a 10-second busy timeout. The stability gate runs four i
 External ranking evaluation uses a public case and private reveal. Before prediction, SHA-256 commits to a random salt, evaluation ID, problem fingerprint, evaluator reference, and expected order. The public case locks the balanced-v1 scoring profile but contains none of the private fields.
 
 Scoring deterministically reruns the prediction, verifies all fingerprints and the reveal commitment, and creates an immutable result record. This prevents unnoticed post-result relabelling; it does not authenticate evaluator identity or prove independence.
+
+## ADR-019 — Audit mutations atomically without invented history
+
+**Status:** Accepted — 2026-08-27
+
+Record every successful problem, node, edge, import, and restore mutation in an append-only `audit_events` table inside the same transaction as the state change. Record before/after data for updates and tombstone details for deletes. Do not emit events for no-op updates.
+
+When schema migration enables auditing on an existing problem, create one `audit_baseline` containing current counts and an explicit statement that earlier mutations were not reconstructed. Audit order uses SQLite row order rather than random event IDs.

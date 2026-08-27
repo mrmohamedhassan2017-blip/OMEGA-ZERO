@@ -61,6 +61,24 @@ class CoreTests(unittest.TestCase):
         self.assertEqual("resolved", updated["status"])
         self.assertEqual("experiment-1", updated["evidence"][0]["source"])
 
+    def test_noop_update_does_not_pollute_audit_log(self):
+        before = len(self.store.list_audit_events(self.problem["id"]))
+        self.store.update_node(self.goal["id"], statement=self.goal["statement"],
+                               confidence=self.goal["confidence"], status=self.goal["status"])
+        self.assertEqual(before, len(self.store.list_audit_events(self.problem["id"])))
+
+    def test_audit_log_records_ordered_mutations_and_survives_problem_delete(self):
+        updated = self.store.update_problem(self.problem["id"], title="Launch revised")
+        edge_id = self.store.graph(self.problem["id"])["edges"][0]["id"]
+        self.store.delete_edge(edge_id)
+        self.store.delete_node(self.unknown["id"])
+        self.store.delete_problem(self.problem["id"])
+        events = self.store.list_audit_events(self.problem["id"])
+        self.assertEqual(sorted(event["sequence"] for event in events), [event["sequence"] for event in events])
+        self.assertEqual("deleted", events[-1]["action"])
+        self.assertEqual("problem", events[-1]["entity_type"])
+        self.assertEqual("Launch revised", events[-1]["payload"]["title"])
+
     def test_evidence_contract_normalizes_legacy_records(self):
         record = normalize_evidence(["old-note"])[0]
         self.assertEqual("legacy", record["verification_status"])

@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.8 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.9 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -24,6 +24,11 @@ Health check: `GET http://127.0.0.1:8787/health`
 - `POST /problems/{id}/nodes` — `{ "type": "assumption", "role": "hypothesis", "statement": "...", "confidence": 0.4, "evidence": [] }`
 - `POST /problems/{id}/edges` — `{ "source_id": "...", "target_id": "...", "type": "depends_on" }`
 - `GET /problems/{id}/graph`
+- `GET /problems/{id}/audit` — ordered append-only mutation events
+- `PATCH /problems/{id}` — update title or description
+- `PATCH /nodes/{id}` — update statement, confidence, evidence, status, or role
+- `DELETE /nodes/{id}` — delete a node and its incident edges
+- `DELETE /edges/{id}` — delete one relationship
 - `GET /problems/{id}/export` — canonical portable bundle with SHA-256 fingerprint
 - `POST /imports` — validate and atomically import a bundle
 - `DELETE /problems/{id}` — delete a problem and its graph
@@ -32,7 +37,6 @@ Health check: `GET http://127.0.0.1:8787/health`
 - `POST /problems/{id}/actions/prove-it` — `{ "node_id": "..." }`
 - `POST /problems/{id}/actions/what-if` — `{ "node_id": "...", "value": false }`
 - `POST /problems/{id}/actions/validate` — `{}`
-- `PATCH /nodes/{id}` — update `statement`, `confidence`, `evidence`, or `status`
 
 ## Relationship semantics
 
@@ -67,6 +71,8 @@ python -m omega.cli --db data/omega.db restore backups/omega.db
 Imports verify the bundle fingerprint and the complete graph before one transaction writes anything. Exceptions roll transactions back. `release-check` verifies deterministic export, semantic round-trip, imported graph validity, atomic tamper rejection, and backup restoration.
 
 SQLite uses WAL mode and a busy timeout. `stability-audit` launches multiple Python writer processes against one temporary database as one of its gates. See [docs/CORE_STABILITY.md](docs/CORE_STABILITY.md) for what passing currently means and what it does not mean.
+
+Every successful mutation writes an audit event in the same database transaction. Failed transactions write neither state nor event, and no-op updates create no noise. When an older database enables auditing, OMEGA writes an explicit `audit_baseline`; it never invents historical events.
 
 ## Blind external evaluation
 

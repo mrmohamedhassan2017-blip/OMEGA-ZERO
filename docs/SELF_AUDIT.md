@@ -124,3 +124,19 @@ The machinery for honest evidence now exists, but the evidence itself does not. 
 ### Next falsification target
 
 Exercise the documented workflow on a genuinely external problem without exposing the private reveal before prediction. Until such records exist, keep V1.0 false and improve only internal usability issues that do not pretend to remove this blocker.
+
+## Run 008 — 2026-08-27
+
+OMEGA attacked an internal contradiction in its auditability claim: structured evidence existed, but mutations had no history. V0.9 adds atomic append-only events for create, update, delete, import, and restore operations; completes problem/node/edge lifecycle APIs; and suppresses no-op event noise.
+
+For the existing self database, migration wrote `audit_baseline` rather than fabricating prior history. The next real change to the evidence-auditability node produced an ordered `updated` event. The stability audit is now 10/10 and the suite contains 43 passing tests.
+
+The evidence-auditability Unknown moved from confidence 0.45 to 0.75. It is no longer among the three highest BREAK IT targets. The external-agreement Unknown remains first at fragility 0.825, exactly as required.
+
+### Honest interpretation
+
+The audit log proves what this local database recorded after audit enablement. It does not authenticate the human making a request, sign events, or guarantee an external evidence source is truthful.
+
+### Next falsification target
+
+Improve first-use usability without weakening contracts: provide a declarative problem-file workflow and a concise analysis report so a real evaluator can create and run a case without hand-authoring HTTP calls.

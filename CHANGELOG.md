@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 — 2026-08-27
+
+- Added append-only atomic audit events for all core mutations.
+- Added explicit audit baselines when upgrading existing databases.
+- Added problem updates and node/edge deletion APIs.
+- Preserved delete tombstones after problem removal.
+- Suppressed audit noise from no-op updates.
+- Added ordered audit retrieval over HTTP.
+- Raised the auditability self-claim confidence with executable evidence.
+- Expanded stability audit to 10 gates and the suite from 40 to 43 tests.
+
 ## 0.8.0 — 2026-08-27
 
 - Added blinded external evaluation case, reveal, prediction, result, and summary formats.

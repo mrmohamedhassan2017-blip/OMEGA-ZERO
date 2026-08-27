@@ -25,10 +25,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
             by_statement = {node["statement"]: node for node in graph["nodes"]}
         evidence_question = by_statement.get("Which evidence schema is sufficient for auditability?")
         if evidence_question:
-            store.update_node(evidence_question["id"], confidence=0.45, status="testing", evidence=[{
-                "source": "docs/DECISIONS.md#adr-007--structured-evidence-contract",
-                "observed_at": "2026-08-27", "method": "implemented-contract-review", "reliability": 0.8,
-                "verification_status": "corroborated", "note": "The contract exists; real audit sufficiency remains unproven."}])
+            store.update_node(evidence_question["id"], confidence=0.75, status="testing", evidence=[{
+                "source": "audit_events schema + mutation lifecycle tests", "observed_at": "2026-08-27",
+                "method": "append-only-atomic-mutation-audit", "reliability": 0.85,
+                "verification_status": "reproduced", "note": "Audit begins at enablement; external provenance sufficiency remains unproven."}])
         ranking = by_statement.get("BREAK IT fragility ranking corresponds to useful attack priority")
         if ranking:
             store.update_node(ranking["id"], confidence=0.65, status="testing", evidence=[{
@@ -62,10 +62,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "types": store.add_node(pid, "assumption", "Four node types capture the distinctions needed by real problems", 0.35),
         "semantics": store.add_node(pid, "constraint", "Every edge type must have one documented direction and meaning", 0.75),
         "ranking": store.add_node(pid, "assumption", "BREAK IT fragility ranking corresponds to useful attack priority", 0.2),
-        "evidence": store.add_node(pid, "unknown", "Which evidence schema is sufficient for auditability?", 0.45, [{
-            "source": "docs/DECISIONS.md#adr-007--structured-evidence-contract", "observed_at": "2026-08-27",
-            "method": "implemented-contract-review", "reliability": 0.8, "verification_status": "corroborated",
-            "note": "The contract exists; real audit sufficiency remains unproven."}]),
+        "evidence": store.add_node(pid, "unknown", "Which evidence schema is sufficient for auditability?", 0.75, [{
+            "source": "audit_events schema + mutation lifecycle tests", "observed_at": "2026-08-27",
+            "method": "append-only-atomic-mutation-audit", "reliability": 0.85, "verification_status": "reproduced",
+            "note": "Audit begins at enablement; external provenance sufficiency remains unproven."}]),
         "tests": store.add_node(pid, "fact", "Core unit tests pass on the current implementation", 0.9,
                                 [{"source": "python -m unittest discover -s tests -v", "observed_at": "2026-08-27"}]),
         "boundary": store.add_node(pid, "constraint", "WOS and Reality Compiler remain excluded until Core stability gates pass", 1.0),
