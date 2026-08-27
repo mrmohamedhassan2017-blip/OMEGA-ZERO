@@ -1,0 +1,4 @@
+{"event":"AGENT_STARTED","timestamp":"2026-01-01T00:00:00Z"}
+{"event":"TEST_STARTED","timestamp":"2026-01-01T00:00:01Z"}
+{"event":"TEST_PASSED","timestamp":"2026-01-01T00:00:02Z"}
+{"event":"AGENT_COMPLETED","timestamp":"2026-01-01T00:00:03Z"}

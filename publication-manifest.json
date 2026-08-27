@@ -1,0 +1,24 @@
+{
+  "format": "zero-inbound-publication-manifest",
+  "format_version": 1,
+  "experiment_id": "ZERO-INBOUND-001",
+  "surface": "github-action-ci-audit",
+  "classification": "INTERNAL_DERIVED_TECHNICAL_EXECUTION_NOT_EXTERNAL_EVIDENCE",
+  "frozen_specification_hash": "084d9cc1f6ef7e7f97b3ba480daf16df95e15df2607d1cc5b08298eb5d8eab87",
+  "kit_sha256": "6db8974c7db7dff68cf7518c6388c9a0e05a20c1019fae2a3c7c620aaef4f419",
+  "files": {
+    ".github/workflows/zero-inbound-001.yml": "3b85ef2a83cadf1188bb327f9dc940698d26489c62841d41ecf9b7ec12094997",
+    ".gitignore": "52d68cbe2ff4fa819743bf10e00f03b18676e5cc99da2301bb46f418b4b91809",
+    "README.md": "3c310e66f9b7716fba85d8bc899ac1a5cab311564a9cf2b9f89fff33cd37c51d",
+    "experiments/ZERO-INBOUND-001/evidence-contract.json": "0993bfc0a057907ca67f63636d07aeaa1844e505b4d31bc72c1da50eb6097ff7",
+    "experiments/ZERO-INBOUND-001/experiment-spec.json": "18b6588e70fb27fb5993a9596de1a7e9b42e36ec08357eda4a4b44f82549968d",
+    "experiments/ZERO-INBOUND-001/privacy-safe-events.jsonl": "32f085400395714ffaef9a42ebc2d3e378447d0df179074b32854bdf9b88a790",
+    "pyproject.toml": "1b1349811d8d5bd25d68d4b92f0bee194ab445e42c42b6f99cae73e0fecd6165",
+    "src/agent_runtime_audit/__init__.py": "f10521830eaaa2943b4176476268184b0cf8059fc89c74eef94fd7c50881989c",
+    "src/agent_runtime_audit/__main__.py": "e7dc861204dcba0612b29adafd5a3425c46e576414d9dd40d809186b69a52d80",
+    "src/agent_runtime_audit/audit.py": "e1a5a81edea71d4734b7b12f8fd38f7dcc5ed45361f4a67146321b17839d27dc",
+    "src/agent_runtime_audit/cli.py": "bc525cea75b22efc84168662cb3c87a1b117278b3830021b72f0c01c5c6f18b3",
+    "tests/test_audit.py": "871f14b3dd327d9ab85785e9c916f6b8f0f75505a7bfab9a3c861851d549a4ff"
+  },
+  "manifest_binding": "This manifest is bound by the published Git commit SHA; its own SHA-256 is recorded in OMEGA publication evidence."
+}

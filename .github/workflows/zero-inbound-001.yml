@@ -1,0 +1,56 @@
+name: ZERO-INBOUND-001 agent-runtime audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install local package
+        run: python -m pip install --no-deps .
+      - name: Unit tests
+        run: python -W error::ResourceWarning -m unittest discover -s tests -v
+      - name: Run privacy-safe audit
+        run: >-
+          python -m agent_runtime_audit
+          experiments/ZERO-INBOUND-001/privacy-safe-events.jsonl
+          --json-out zero-inbound-result.json
+          --html-out zero-inbound-result.html
+      - name: Verify and bind result
+        shell: python
+        run: |
+          import hashlib, json, pathlib
+          result = pathlib.Path("zero-inbound-result.json")
+          payload = json.loads(result.read_text(encoding="utf-8"))
+          if payload.get("format") != "omega.agent-runtime-audit":
+              raise SystemExit("unexpected audit format")
+          receipt = {
+              "experiment_id": "ZERO-INBOUND-001",
+              "published_commit_sha": "${{ github.sha }}",
+              "workflow_repository": "${{ github.repository }}",
+              "workflow_run_id": "${{ github.run_id }}",
+              "kit_sha256": "6db8974c7db7dff68cf7518c6388c9a0e05a20c1019fae2a3c7c620aaef4f419",
+              "result_sha256": hashlib.sha256(result.read_bytes()).hexdigest(),
+              "classification": "TECHNICAL_RUN_NOT_DEMAND",
+          }
+          pathlib.Path("zero-inbound-receipt.json").write_text(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zero-inbound-001-receipt
+          path: |
+            zero-inbound-result.json
+            zero-inbound-result.html
+            zero-inbound-receipt.json
+          if-no-files-found: error
+          retention-days: 30
