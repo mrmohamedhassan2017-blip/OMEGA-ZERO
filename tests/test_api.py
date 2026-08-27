@@ -8,6 +8,7 @@ from pathlib import Path
 
 from omega.api import make_handler
 from omega.store import Store
+from omega.evaluation import prepare_blind_case, run_blind_case, score_reveal
 
 
 class ApiTests(unittest.TestCase):
@@ -46,6 +47,19 @@ class ApiTests(unittest.TestCase):
     def test_bad_input_returns_json_error(self):
         status, data = self.request("POST", "/problems", {})
         self.assertEqual(400, status); self.assertIn("error", data)
+
+    def test_evaluation_recording_routes(self):
+        problem = self.store.create_problem("Eval", "API")
+        self.store.add_node(problem["id"], "unknown", "Weak", 0.1)
+        self.store.add_node(problem["id"], "assumption", "Strong", 0.8)
+        bundle = self.store.export_problem(problem["id"])
+        keys = [n["key"] for n in bundle["payload"]["nodes"]]
+        prepared = prepare_blind_case(bundle, {"expected_order": keys, "evaluator_ref": "api"}, salt="api-salt")
+        record = score_reveal(prepared["public_case"], run_blind_case(prepared["public_case"]), prepared["private_reveal"])
+        status, _ = self.request("POST", "/evaluations", record)
+        self.assertEqual(201, status)
+        status, payload = self.request("GET", "/evaluations")
+        self.assertEqual(200, status); self.assertEqual(1, len(payload["evaluations"]))
 
     def test_invalid_evidence_is_rejected_over_http(self):
         _, problem = self.request("POST", "/problems", {"title": "Evidence", "description": "test"})

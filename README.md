@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.10 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.11 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 

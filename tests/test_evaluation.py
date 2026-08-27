@@ -62,6 +62,22 @@ class EvaluationTests(unittest.TestCase):
     def test_protocol_gate(self):
         self.assertTrue(run_protocol_gate()["passed"])
 
+    def test_verified_record_persists_once(self):
+        prepared = self.prepare(); prediction = run_blind_case(prepared["public_case"])
+        record = score_reveal(prepared["public_case"], prediction, prepared["private_reveal"])
+        stored = self.store.record_evaluation(record)
+        self.assertTrue(stored["stored"])
+        self.assertEqual(1, len(self.store.list_evaluations()))
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            self.store.record_evaluation(record)
+
+    def test_unverified_record_is_rejected(self):
+        prepared = self.prepare(); prediction = run_blind_case(prepared["public_case"])
+        record = score_reveal(prepared["public_case"], prediction, prepared["private_reveal"])
+        record["verified"] = False
+        with self.assertRaisesRegex(ValueError, "verified"):
+            self.store.record_evaluation(record)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -100,7 +100,8 @@ def main() -> None:
         record = score_reveal(*[json.loads(Path(path).read_text(encoding="utf-8"))
                                 for path in (args.public_case, args.prediction, args.reveal)])
         output_path = _write_new_json(args.out, record)
-        print(json.dumps({"result": str(output_path), "metrics": record["metrics"]}, indent=2))
+        stored = Store(args.db).record_evaluation(record)
+        print(json.dumps({"result": str(output_path), "metrics": record["metrics"], "stored": stored}, indent=2))
     elif args.command == "eval-aggregate":
         records = [json.loads(Path(path).read_text(encoding="utf-8")) for path in args.records]
         print(json.dumps(aggregate_records(records), ensure_ascii=False, indent=2))

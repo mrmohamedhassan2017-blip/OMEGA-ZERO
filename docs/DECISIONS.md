@@ -128,6 +128,10 @@ Record every successful problem, node, edge, import, and restore mutation in an 
 
 Bulk import is one logical mutation and therefore records one `imported` event rather than pretending each row was independently created.
 
+## ADR-021 — Persist verified external evaluations
+
+Verified blind-evaluation results are stored as immutable records keyed by evaluation id and record SHA-256. Duplicate fingerprints are rejected, and each insertion emits one append-only audit event in the same transaction. Unverified or tampered records never enter the evidence base.
+
 ## ADR-020 — Declarative first-use workflow
 
 **Status:** Accepted — 2026-08-27

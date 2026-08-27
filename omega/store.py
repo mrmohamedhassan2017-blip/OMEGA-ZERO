@@ -70,6 +70,12 @@ class Store:
                 );
                 CREATE INDEX IF NOT EXISTS idx_audit_problem_created
                     ON audit_events(problem_id, created_at, id);
+                CREATE TABLE IF NOT EXISTS evaluations (
+                    evaluation_id TEXT PRIMARY KEY, case_sha256 TEXT NOT NULL,
+                    record_sha256 TEXT NOT NULL UNIQUE, evaluator_ref TEXT NOT NULL,
+                    metrics TEXT NOT NULL, record TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
             """)
             version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
             previous_version = int(version_row[0]) if version_row else None
@@ -89,7 +95,7 @@ class Store:
                                        {"title": problem["title"], "nodes_at_enablement": node_count,
                                         "edges_at_enablement": edge_count,
                                         "note": "Audit logging starts here; earlier mutations are not reconstructed."})
-            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','5')")
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','6')")
 
     @staticmethod
     def _id(prefix: str) -> str:
@@ -278,6 +284,35 @@ class Store:
             event["payload"] = json.loads(event["payload"])
         return events
 
+    def record_evaluation(self, record: dict[str, Any]) -> dict[str, Any]:
+        if record.get("format") != "omega.blind-evaluation-result" or record.get("format_version") != 1:
+            raise ValueError("unsupported evaluation result format")
+        if record.get("verified") is not True or not record.get("evaluation_id"):
+            raise ValueError("only verified evaluation results can be stored")
+        unsigned = {key: value for key, value in record.items() if key != "record_sha256"}
+        expected_hash = hashlib.sha256(self._canonical_json(unsigned).encode("utf-8")).hexdigest()
+        if record.get("record_sha256") != expected_hash:
+            raise ValueError("evaluation result fingerprint mismatch")
+        try:
+            with self.connect() as db:
+                db.execute("INSERT INTO evaluations(evaluation_id,case_sha256,record_sha256,evaluator_ref,metrics,record) VALUES(?,?,?,?,?,?)",
+                           (record["evaluation_id"], record["case_sha256"], record["record_sha256"],
+                            record["evaluator_ref"], json.dumps(record["metrics"], sort_keys=True),
+                            json.dumps(record, ensure_ascii=False, sort_keys=True)))
+                self._record_event(db, None, "evaluation", record["evaluation_id"], "recorded",
+                                   {"case_sha256": record["case_sha256"], "record_sha256": record["record_sha256"]})
+        except sqlite3.IntegrityError as exc:
+                raise ValueError("duplicate evaluation: already recorded or fingerprint already used") from exc
+        return {"stored": True, "evaluation_id": record["evaluation_id"], "record_sha256": record["record_sha256"]}
+
+    def list_evaluations(self) -> list[dict[str, Any]]:
+        with self.connect() as db:
+            rows = db.execute("SELECT * FROM evaluations ORDER BY created_at,rowid").fetchall()
+        return [{"evaluation_id": row["evaluation_id"], "case_sha256": row["case_sha256"],
+                 "record_sha256": row["record_sha256"], "evaluator_ref": row["evaluator_ref"],
+                 "metrics": json.loads(row["metrics"]), "record": json.loads(row["record"]),
+                 "created_at": row["created_at"]} for row in rows]
+
     def graph(self, problem_id: str) -> dict[str, Any]:
         problem = self.get_problem(problem_id)
         with self.connect() as db:
@@ -431,7 +466,7 @@ class Store:
             quick_check = db.execute("PRAGMA quick_check").fetchone()[0]
             version_row = db.execute("SELECT value FROM schema_meta WHERE key='schema_version'").fetchone()
             counts = {table: db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-                      for table in ("problems", "nodes", "edges", "audit_events")}
+                      for table in ("problems", "nodes", "edges", "audit_events", "evaluations")}
         return {"healthy": quick_check == "ok" and version_row is not None,
                 "quick_check": quick_check, "schema_version": int(version_row[0]) if version_row else None,
                 "counts": counts}

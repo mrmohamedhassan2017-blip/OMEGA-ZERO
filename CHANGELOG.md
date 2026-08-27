@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 — 2026-08-27
+
+- Persist verified blind evaluation records with SHA-256 identity and append-only audit events.
+- Added `/evaluations` API routes and automatic CLI `eval-score` persistence.
+- Expanded the suite to 51 passing tests.
+
 ## 0.10.0 — 2026-08-27
 
 - Added declarative JSON Problem Spec with stable keys and analysis target.

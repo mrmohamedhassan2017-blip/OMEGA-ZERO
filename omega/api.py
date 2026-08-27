@@ -32,6 +32,8 @@ def make_handler(store: Store):
                     return self._send(200, {"status": "ok", "version": __version__})
                 if parts == ["problems"]:
                     return self._send(200, {"problems": store.list_problems()})
+                if parts == ["evaluations"]:
+                    return self._send(200, {"evaluations": store.list_evaluations()})
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "graph":
                     return self._send(200, store.graph(parts[1]))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "export":
@@ -50,6 +52,8 @@ def make_handler(store: Store):
                     return self._send(201, store.create_problem(data["title"], data.get("description", "")))
                 if parts == ["imports"]:
                     return self._send(201, store.import_problem(data))
+                if parts == ["evaluations"]:
+                    return self._send(201, store.record_evaluation(data))
                 if parts == ["specs", "analyze"]:
                     return self._send(201, analyze_spec(store, data))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "nodes":
