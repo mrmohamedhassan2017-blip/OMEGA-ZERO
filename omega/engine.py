@@ -50,7 +50,14 @@ class Engine:
         for node in self.nodes.values():
             if node["type"] not in {"assumption", "constraint", "unknown"}:
                 continue
-            dependents = len([e for e in self.incoming[node["id"]] if e["type"] == "depends_on"])
+            direct_dependents = [e["source_id"] for e in self.incoming[node["id"]] if e["type"] == "depends_on"]
+            reachable = set(direct_dependents); queue = deque(direct_dependents)
+            while queue:
+                current = queue.popleft()
+                for edge in self.incoming[current]:
+                    if edge["type"] == "depends_on" and edge["source_id"] not in reachable:
+                        reachable.add(edge["source_id"]); queue.append(edge["source_id"])
+            dependents = len(reachable)
             strength = evidence_strength(node["evidence"])
             confidence_risk = round((1 - node["confidence"]) * self.scoring_profile.confidence_weight, 3)
             dependency_risk = round(min(dependents, self.scoring_profile.dependency_cap) * self.scoring_profile.dependency_weight, 3)
