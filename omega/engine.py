@@ -4,6 +4,7 @@ from collections import defaultdict, deque
 from typing import Any
 
 from .evidence import evidence_strength
+from .ontology import normalize_role
 
 
 class Engine:
@@ -38,6 +39,10 @@ class Engine:
     def break_it(self) -> dict[str, Any]:
         ranked = []
         for node in self.nodes.values():
+            try:
+                normalize_role(node["type"], node.get("role"))
+            except (KeyError, ValueError) as exc:
+                issues.append({"severity": "error", "code": "INVALID_TYPE_ROLE", "node_id": node["id"], "detail": str(exc)})
             if node["type"] not in {"assumption", "constraint", "unknown"}:
                 continue
             dependents = len([e for e in self.incoming[node["id"]] if e["type"] == "depends_on"])

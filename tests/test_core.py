@@ -1,11 +1,13 @@
 import tempfile
 import unittest
+import sqlite3
 from pathlib import Path
 
 from omega.engine import Engine
 from omega.store import Store
 from omega.evidence import evidence_strength, normalize_evidence
 from omega.benchmark import run_ranking_benchmark
+from omega.ontology import run_taxonomy_benchmark
 
 
 class CoreTests(unittest.TestCase):
@@ -74,6 +76,36 @@ class CoreTests(unittest.TestCase):
         result = run_ranking_benchmark()
         self.assertTrue(result["gate_passed"])
         self.assertEqual(1.0, result["metrics"]["top1_accuracy"])
+
+    def test_taxonomy_reference_benchmark_covers_three_domains(self):
+        result = run_taxonomy_benchmark()
+        self.assertTrue(result["gate_passed"])
+        self.assertEqual(12, result["metrics"]["cases"])
+        self.assertEqual(["incident", "product", "science"], result["metrics"]["domains"])
+
+    def test_invalid_functional_role_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "not valid"):
+            self.store.add_node(self.problem["id"], "fact", "A question is not a fact role", role="question")
+
+    def test_v02_database_migrates_role_column_without_data_loss(self):
+        legacy_path = Path(self.tmp.name) / "legacy.db"
+        db = sqlite3.connect(legacy_path)
+        try:
+            db.executescript("""
+                CREATE TABLE problems(id TEXT PRIMARY KEY,title TEXT NOT NULL,description TEXT NOT NULL,created_at TEXT);
+                CREATE TABLE nodes(id TEXT PRIMARY KEY,problem_id TEXT NOT NULL,type TEXT NOT NULL,statement TEXT NOT NULL,
+                    confidence REAL NOT NULL,evidence TEXT NOT NULL,status TEXT NOT NULL,created_at TEXT);
+                CREATE TABLE edges(id TEXT PRIMARY KEY,problem_id TEXT NOT NULL,source_id TEXT NOT NULL,target_id TEXT NOT NULL,
+                    type TEXT NOT NULL,created_at TEXT);
+                INSERT INTO problems VALUES('p','Legacy','old','then');
+                INSERT INTO nodes VALUES('n','p','assumption','Old claim',0.4,'[]','open','then');
+            """)
+            db.commit()
+        finally:
+            db.close()
+        migrated = Store(legacy_path).get_node("n")
+        self.assertEqual("hypothesis", migrated["role"])
+        self.assertEqual("Old claim", migrated["statement"])
 
     def test_validation_rejects_fact_without_evidence(self):
         unsupported = self.store.add_node(self.problem["id"], "fact", "Unsupported claim", 0.7)

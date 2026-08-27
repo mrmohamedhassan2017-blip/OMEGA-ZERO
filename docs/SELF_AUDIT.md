@@ -36,3 +36,17 @@ These fixtures were designed from the intended semantics, so they prevent regres
 ### Next falsification target
 
 Build independently labelled reference problems, measure agreement and ranking quality, and test sensitivity to score weights. Until then, a user must treat BREAK IT as an explainable prioritization suggestion rather than an authoritative answer.
+
+## Run 003 — 2026-08-27
+
+The highest-ranked taxonomy risk was tested by separating epistemic type from functional role. Twelve human-labelled reference statements cover product discovery, incident diagnosis, and scientific reasoning, with all four epistemic types represented in every domain.
+
+Result: 12/12 type-role pairs are representable and valid. Migration from the previous schema preserves old nodes and assigns deterministic default roles.
+
+### Honest interpretation
+
+The test demonstrates that the two-axis ontology handles the selected cases without adding top-level types. It does not establish universal completeness, automatic classification accuracy, or agreement between independent annotators. The self-graph raises confidence in the four-type claim to 0.60 and keeps it in `testing`.
+
+### Next falsification target
+
+The overall trustworthiness claim is now the highest fragile node. The next increment should turn stability into explicit release gates: persistence round-trips, export/import, recovery behavior, deterministic outputs, API lifecycle coverage, and a documented completion audit.

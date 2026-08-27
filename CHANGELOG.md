@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-08-27
+
+- Added a functional role axis while preserving the four epistemic node types.
+- Added constrained type-role validation and HTTP rejection of invalid pairs.
+- Added automatic schema migration for databases created before roles existed.
+- Added 12 taxonomy reference cases across product, incident, and science domains.
+- Integrated taxonomy evidence into OMEGA's persistent self-graph.
+- Expanded the suite from 16 to 20 tests.
+
 ## 0.3.0 — 2026-08-27
 
 - Added a normalized, validated evidence contract with legacy compatibility.

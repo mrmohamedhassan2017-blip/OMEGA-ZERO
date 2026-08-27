@@ -45,7 +45,7 @@ def make_handler(store: Store):
                     return self._send(201, store.create_problem(data["title"], data.get("description", "")))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "nodes":
                     return self._send(201, store.add_node(parts[1], data["type"], data["statement"],
-                                                           data.get("confidence", 0.5), data.get("evidence")))
+                                                           data.get("confidence", 0.5), data.get("evidence"), data.get("role")))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "edges":
                     return self._send(201, store.add_edge(parts[1], data["source_id"], data["target_id"], data["type"]))
                 if len(parts) == 4 and parts[0] == "problems" and parts[2] == "actions":
@@ -66,7 +66,7 @@ def make_handler(store: Store):
             try:
                 data = self._body()
                 if len(parts) == 2 and parts[0] == "nodes":
-                    allowed = {key: data[key] for key in ("statement", "confidence", "evidence", "status") if key in data}
+                    allowed = {key: data[key] for key in ("statement", "confidence", "evidence", "status", "role") if key in data}
                     return self._send(200, store.update_node(parts[1], **allowed))
                 self._send(404, {"error": "route not found"})
             except (KeyError, ValueError, json.JSONDecodeError) as exc:

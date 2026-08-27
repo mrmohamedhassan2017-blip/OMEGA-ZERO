@@ -49,3 +49,11 @@ Evidence strength combines declared reliability with verification state. It is a
 **Status:** Accepted — 2026-08-27
 
 Keep small synthetic benchmark cases as executable invariants for confidence, evidence, dependency blast radius, and node-type policy. A perfect score on these constructed cases does not establish real-world usefulness. The ranking assumption remains in `testing` until reference problems with independently chosen attack priorities are added.
+
+## ADR-009 — Two-axis ontology
+
+**Status:** Accepted — 2026-08-27
+
+Keep the four core node types as epistemic categories: fact, assumption, constraint, and unknown. Add a constrained functional `role` axis instead of multiplying top-level types. For example, a fact may be a measurement or event; an assumption may be a hypothesis or prediction; a constraint may be a policy or invariant; an unknown may be a question or missing data.
+
+This model covers the current product, incident, and scientific reference cases while keeping graph operations dependent on epistemic state. It does not claim universal domain coverage. Unsupported type/role pairs are rejected, and schema migration assigns an explicit default role to older nodes.

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .evidence import normalize_evidence
+from .ontology import normalize_role
 
 NODE_TYPES = {"fact", "assumption", "constraint", "unknown"}
 EDGE_TYPES = {"depends_on", "supports", "contradicts", "relates_to"}
@@ -43,6 +44,7 @@ class Store:
                 CREATE TABLE IF NOT EXISTS nodes (
                     id TEXT PRIMARY KEY, problem_id TEXT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
                     type TEXT NOT NULL CHECK(type IN ('fact','assumption','constraint','unknown')),
+                    role TEXT,
                     statement TEXT NOT NULL, confidence REAL NOT NULL DEFAULT 0.5,
                     evidence TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'open',
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -55,8 +57,11 @@ class Store:
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(source_id, target_id, type)
                 );
-                INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','2');
             """)
+            columns = {row[1] for row in db.execute("PRAGMA table_info(nodes)")}
+            if "role" not in columns:
+                db.execute("ALTER TABLE nodes ADD COLUMN role TEXT")
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','3')")
 
     @staticmethod
     def _id(prefix: str) -> str:
@@ -85,16 +90,17 @@ class Store:
         return dict(row) if row else None
 
     def add_node(self, problem_id: str, kind: str, statement: str, confidence: float = 0.5,
-                 evidence: list[str] | None = None) -> dict[str, Any]:
+                 evidence: list[Any] | None = None, role: str | None = None) -> dict[str, Any]:
         self.get_problem(problem_id)
         if kind not in NODE_TYPES:
             raise ValueError(f"type must be one of {sorted(NODE_TYPES)}")
         if not 0 <= confidence <= 1:
             raise ValueError("confidence must be between 0 and 1")
+        role = normalize_role(kind, role)
         nid = self._id("node")
         with self.connect() as db:
-            db.execute("INSERT INTO nodes(id,problem_id,type,statement,confidence,evidence) VALUES(?,?,?,?,?,?)",
-                       (nid, problem_id, kind, statement, confidence, json.dumps(normalize_evidence(evidence))))
+            db.execute("INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence) VALUES(?,?,?,?,?,?,?)",
+                       (nid, problem_id, kind, role, statement, confidence, json.dumps(normalize_evidence(evidence))))
         return self.get_node(nid)
 
     def get_node(self, node_id: str) -> dict[str, Any]:
@@ -103,6 +109,7 @@ class Store:
         if not row:
             raise KeyError(f"node not found: {node_id}")
         result = dict(row)
+        result["role"] = normalize_role(result["type"], result.get("role"))
         result["evidence"] = normalize_evidence(json.loads(result["evidence"]))
         return result
 
@@ -144,18 +151,20 @@ class Store:
         return False
 
     def update_node(self, node_id: str, *, statement: str | None = None, confidence: float | None = None,
-                    evidence: list[Any] | None = None, status: str | None = None) -> dict[str, Any]:
+                    evidence: list[Any] | None = None, status: str | None = None,
+                    role: str | None = None) -> dict[str, Any]:
         current = self.get_node(node_id)
         if confidence is not None and not 0 <= confidence <= 1:
             raise ValueError("confidence must be between 0 and 1")
         if status is not None and status not in {"open", "testing", "supported", "falsified", "resolved"}:
             raise ValueError("invalid status")
-        values = (statement if statement is not None else current["statement"],
+        selected_role = normalize_role(current["type"], role if role is not None else current["role"])
+        values = (selected_role, statement if statement is not None else current["statement"],
                   confidence if confidence is not None else current["confidence"],
                   json.dumps(normalize_evidence(evidence) if evidence is not None else current["evidence"]),
                   status if status is not None else current["status"], node_id)
         with self.connect() as db:
-            db.execute("UPDATE nodes SET statement=?,confidence=?,evidence=?,status=? WHERE id=?", values)
+            db.execute("UPDATE nodes SET role=?,statement=?,confidence=?,evidence=?,status=? WHERE id=?", values)
         return self.get_node(node_id)
 
     def graph(self, problem_id: str) -> dict[str, Any]:
@@ -164,5 +173,6 @@ class Store:
             nodes = [dict(r) for r in db.execute("SELECT * FROM nodes WHERE problem_id=? ORDER BY created_at,id", (problem_id,))]
             edges = [dict(r) for r in db.execute("SELECT * FROM edges WHERE problem_id=? ORDER BY created_at,id", (problem_id,))]
         for node in nodes:
+            node["role"] = normalize_role(node["type"], node.get("role"))
             node["evidence"] = normalize_evidence(json.loads(node["evidence"]))
         return {"problem": problem, "nodes": nodes, "edges": edges}

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import Engine
+from .ontology import run_taxonomy_benchmark
 
 
 def _node(node_id: str, kind: str, confidence: float, evidence: list | None = None) -> dict[str, Any]:
@@ -50,3 +51,8 @@ def run_ranking_benchmark() -> dict[str, Any]:
                                              "mean_reciprocal_rank": round(reciprocal_rank_sum / total, 3)},
             "gate_passed": all(result["passed"] for result in results)}
 
+
+def run_all_benchmarks() -> dict[str, Any]:
+    ranking, taxonomy = run_ranking_benchmark(), run_taxonomy_benchmark()
+    return {"ranking": ranking, "taxonomy": taxonomy,
+            "gate_passed": ranking["gate_passed"] and taxonomy["gate_passed"]}

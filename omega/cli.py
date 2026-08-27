@@ -5,7 +5,7 @@ from .api import run
 from .engine import Engine
 from .store import Store
 from .self_model import self_audit
-from .benchmark import run_ranking_benchmark
+from .benchmark import run_all_benchmarks
 
 
 def demo(db_path: str) -> None:
@@ -36,7 +36,7 @@ def main() -> None:
     elif args.command == "self-audit":
         print(json.dumps(self_audit(Store(args.db)), ensure_ascii=False, indent=2))
     elif args.command == "benchmark":
-        print(json.dumps(run_ranking_benchmark(), ensure_ascii=False, indent=2))
+        print(json.dumps(run_all_benchmarks(), ensure_ascii=False, indent=2))
     else:
         demo(args.db)
 

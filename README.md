@@ -1,6 +1,6 @@
 # Impossible Machine / OMEGA
 
-OMEGA V0.3 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
+OMEGA V0.4 is a local-first reasoning core that turns a problem into an explicit graph of facts, assumptions, constraints, and unknowns. It does **not** claim autonomous truth: it exposes dependencies and produces falsifiable next steps.
 
 ## Run
 
@@ -19,7 +19,7 @@ Health check: `GET http://127.0.0.1:8787/health`
 ## API
 
 - `POST /problems` — `{ "title": "...", "description": "..." }`
-- `POST /problems/{id}/nodes` — `{ "type": "assumption", "statement": "...", "confidence": 0.4, "evidence": [] }`
+- `POST /problems/{id}/nodes` — `{ "type": "assumption", "role": "hypothesis", "statement": "...", "confidence": 0.4, "evidence": [] }`
 - `POST /problems/{id}/edges` — `{ "source_id": "...", "target_id": "...", "type": "depends_on" }`
 - `GET /problems/{id}/graph`
 - `POST /problems/{id}/actions/why` — `{ "node_id": "..." }`
@@ -38,6 +38,8 @@ Edge direction is semantic: `A depends_on B` is stored as source `A`, target `B`
 Current self-audit priority: specify auditable evidence, then validate whether BREAK IT ranking matches useful real-world attack order. See [docs/SELF_AUDIT.md](docs/SELF_AUDIT.md).
 
 Evidence records have a normalized contract: `source`, `observed_at`, `method`, `reliability`, `verification_status`, and `note`. Legacy strings remain readable but are explicitly marked `legacy`. BREAK IT exposes its score components and the calculated evidence strength.
+
+The ontology has two axes. `type` records epistemic state (`fact`, `assumption`, `constraint`, `unknown`); `role` records function (`measurement`, `prediction`, `policy`, `question`, and related roles). Invalid type/role pairs are rejected. Older databases receive a safe default role during schema migration.
 
 ## V0.x boundary
 

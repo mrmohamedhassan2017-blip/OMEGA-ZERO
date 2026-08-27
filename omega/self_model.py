@@ -4,7 +4,7 @@ from typing import Any
 
 from .engine import Engine
 from .store import Store
-from .benchmark import run_ranking_benchmark
+from .benchmark import run_all_benchmarks
 
 TITLE = "OMEGA Core can produce trustworthy, actionable analysis"
 
@@ -26,6 +26,12 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
                 "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
                 "method": "three-synthetic-invariant-cases", "reliability": 0.55,
                 "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
+        type_claim = by_statement.get("Four node types capture the distinctions needed by real problems")
+        if type_claim:
+            store.update_node(type_claim["id"], confidence=0.6, status="testing", role="unverified_claim", evidence=[{
+                "source": "omega.ontology:run_taxonomy_benchmark", "observed_at": "2026-08-27",
+                "method": "12-human-labelled-cases-across-three-domains", "reliability": 0.65,
+                "verification_status": "reproduced", "note": "Supports two-axis representability in the fixture set only."}])
         return store.graph(existing["id"])
 
     problem = store.create_problem(TITLE, "OMEGA V0.x applies its own reasoning model to its design and claims.")
@@ -53,6 +59,10 @@ def ensure_self_graph(store: Store) -> dict[str, Any]:
         "source": "omega.benchmark:run_ranking_benchmark", "observed_at": "2026-08-27",
         "method": "three-synthetic-invariant-cases", "reliability": 0.55,
         "verification_status": "reproduced", "note": "Passes invariants, not yet real-world usefulness."}])
+    store.update_node(nodes["types"]["id"], confidence=0.6, status="testing", role="unverified_claim", evidence=[{
+        "source": "omega.ontology:run_taxonomy_benchmark", "observed_at": "2026-08-27",
+        "method": "12-human-labelled-cases-across-three-domains", "reliability": 0.65,
+        "verification_status": "reproduced", "note": "Supports two-axis representability in the fixture set only."}])
     return store.graph(pid)
 
 
@@ -62,4 +72,4 @@ def self_audit(store: Store) -> dict[str, Any]:
     goal = next(node for node in graph["nodes"] if node["statement"] == "OMEGA analysis is trustworthy and actionable")
     return {"graph": graph, "validation": engine.validate(), "why": engine.why(goal["id"]),
             "break_it": engine.break_it(), "prove_it": engine.prove_it(goal["id"]),
-            "ranking_benchmark": run_ranking_benchmark()}
+            "benchmarks": run_all_benchmarks()}

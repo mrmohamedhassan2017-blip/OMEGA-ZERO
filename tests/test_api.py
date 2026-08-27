@@ -53,6 +53,12 @@ class ApiTests(unittest.TestCase):
                                     {"type": "fact", "statement": "Claim", "evidence": [{"reliability": 2}]})
         self.assertEqual(400, status); self.assertIn("evidence.source", data["error"])
 
+    def test_invalid_type_role_pair_is_rejected_over_http(self):
+        _, problem = self.request("POST", "/problems", {"title": "Role", "description": "test"})
+        status, data = self.request("POST", f"/problems/{problem['id']}/nodes",
+                                    {"type": "constraint", "role": "prediction", "statement": "Mismatch"})
+        self.assertEqual(400, status); self.assertIn("not valid", data["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
