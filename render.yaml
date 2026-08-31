@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: omega-zero-public-backend
+    runtime: python
+    plan: free
+    repo: https://github.com/mrmohamedhassan2017-blip/OMEGA-ZERO
+    branch: main
+    numInstances: 1
+    buildCommand: "python -m pip install -e ."
+    startCommand: "python -m omega.public_api --host 0.0.0.0"
+    envVars:
+      - key: PUBLIC_DEPLOYMENT_CLASSIFICATION
+        value: PUBLIC_SAFE_BACKEND
+      - key: PUBLIC_FRONTEND_ORIGIN
+        value: ""

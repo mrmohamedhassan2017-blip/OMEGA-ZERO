@@ -291,4 +291,16 @@ Last updated: 2026-08-31T10:39:01+03:00
 
 Last updated: 2026-08-31T15:22:03+03:00
 
+## Current deployment update — 2026-08-31T15:44:39+03:00
+
+- Resumed `PUBLIC-BACKEND-DEPLOYMENT-V1` from deployment stage after confirming `origin/main` contained `a7ffc704d050f0eaf93eaf7a945ff2c3dff00565`.
+- Found that the local operator API entrypoint exposes internal OMEGA routes and is not safe to publish directly as the public backend.
+- Added a minimal public-only deployment entrypoint, `omega.public_api`, which exposes only `GET /public/health` and `POST /public/code-scan`, uses the existing `omega.public_backend`, supports Render `PORT`, bounds request size, applies exact-origin CORS through `PUBLIC_FRONTEND_ORIGIN`, and returns sanitized JSON errors.
+- Added `render.yaml` for a single free Render web worker using `python -m omega.public_api --host 0.0.0.0`.
+- Local deployment verification passed, but no Render service was created because no Render CLI or Render API credential/control channel is configured on this host.
+- Current deployment state: `DEPLOYMENT_BLOCKED_RENDER_AUTH_REQUIRED`; no payment, external service creation, or live backend deployment occurred.
+- Verification passed: targeted public deployment/API tests `156/156`; full suite `720/720` with ResourceWarning-as-error; benchmark PASS; release gates PASS; stability gates PASS; diff check PASS; public secret scan `0` hits.
+
+Last updated: 2026-08-31T15:44:39+03:00
+
 - Public exposure audit remediation: live .omega/ runtime/evidence state and data/ generated local data are no longer public-tracked in the current tree. PUBLICATION_BOUNDARY.md, public-boundary.json, and 	ools/publication_guard.py define the public/private boundary. Prior pushed history still contains previously tracked .omega/data metadata and remains a separate cleanup decision; no credential-shaped secret is claimed without scan evidence.

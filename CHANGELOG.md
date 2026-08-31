@@ -824,3 +824,11 @@
 - Preserved the deployment boundary: backend is `SAFE_BACKEND_DEPLOYMENT_READY`, not publicly live. No hosting target, external write, financial action, production routing change, Supervisor/Wake Plane change, or V0.30 mutation occurred.
 - Verification passed: targeted tests `146/146`; full suite `716/716`; benchmark PASS; release PASS; stability PASS; publication guard PASS; tracked-file secret scan `0` hits.
 
+# 2026-08-31 — Public Backend Render deployment preparation
+
+- Added `omega.public_api`, a public-only HTTP process for Render deployment that mounts only `GET /public/health` and `POST /public/code-scan`.
+- Added exact-origin CORS configuration through `PUBLIC_FRONTEND_ORIGIN`, bounded request-size handling, sanitized JSON errors, and public-safe health metadata.
+- Added `render.yaml` for one free Render web worker using the existing repository and `omega.public_api`.
+- Verified local deployability and safety gates, but did not create a Render service because Render authentication/control is not configured on this host.
+- Current state: `DEPLOYMENT_BLOCKED_RENDER_AUTH_REQUIRED`; no paid action, external service creation, or live backend deployment occurred.
+

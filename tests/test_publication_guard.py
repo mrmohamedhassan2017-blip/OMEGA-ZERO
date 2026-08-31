@@ -37,6 +37,7 @@ class PublicationGuardTests(unittest.TestCase):
         self.assertAllowedAs("omega/web/app.js", PublicationClass.PUBLIC_DOC)
         self.assertAllowedAs(".github/workflows/zero-inbound-001.yml", PublicationClass.PUBLIC_GENERATED_SAFE)
         self.assertAllowedAs("README.md", PublicationClass.PUBLIC_DOC)
+        self.assertAllowedAs("render.yaml", PublicationClass.PUBLIC_DOC)
 
     def test_unknown_fails_closed(self):
         self.assertBlockedAs("unreviewed-artifact.bin", PublicationClass.UNKNOWN)

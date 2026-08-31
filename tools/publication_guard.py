@@ -112,6 +112,7 @@ def classify_path(path: str) -> tuple[PublicationClass, str]:
         "publication_boundary.md",
         "public-boundary.json",
         "pyproject.toml",
+        "render.yaml",
     }:
         return PublicationClass.PUBLIC_DOC, "top-level public project metadata"
 

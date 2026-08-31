@@ -771,3 +771,13 @@ Current HEAD remediation removes live OMEGA runtime/evidence state from the publ
 - Tests/gates: targeted `146/146 PASS`; full suite `716/716 PASS`; ResourceWarning-as-error PASS; benchmark PASS; release PASS; stability PASS; publication guard PASS; tracked-file secret scan `0` hits.
 - Next safe action: choose or authorize a separate backend hosting target only if public live backend deployment is desired.
 
+# 2026-08-31 — Public Backend Render deployment preparation
+
+- Remote source verification passed for the previous safe-backend commit.
+- Directly deploying `omega.api` was rejected because it contains local/internal OMEGA routes in addition to `/public/*`.
+- Added the bounded deployment process `omega.public_api` so Render can run only the public backend surface.
+- Added `render.yaml` for `omega-zero-public-backend` as one free Python web worker with no persistent source retention and no Redis.
+- Local verification passed: public-only route exposure, CORS exact-origin behavior, request-size bound, invalid input/SSRF rejection, and no internal route exposure.
+- Deployment remains blocked at the real external boundary: no Render CLI/API credential/control channel is present on this host.
+- Next safe action: owner connects/imports the repository blueprint in Render or provides a Render API/control channel with free-tier-only authority.
+
