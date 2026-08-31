@@ -3,7 +3,10 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-import tomllib
+try:
+    import tomllib
+except ImportError:  # Python < 3.11
+    import tomli as tomllib  # type: ignore[no-redef]
 from pathlib import Path
 from typing import Any
 

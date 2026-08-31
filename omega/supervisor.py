@@ -8,7 +8,10 @@ import subprocess
 import sys
 import threading
 import time
-import tomllib
+try:
+    import tomllib
+except ImportError:  # Python < 3.11
+    import tomli as tomllib  # type: ignore[no-redef]
 import xml.sax.saxutils as xmlutils
 import hashlib
 import uuid

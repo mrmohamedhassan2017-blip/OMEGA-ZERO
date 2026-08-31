@@ -20,6 +20,7 @@ from .cyber_expert import answer_request, cyber_status, freeze_final_exam, run_b
 from .cyber_external_evaluation import external_evaluation_status, freeze_external_evaluation_packet
 from .cyber_promotion import promotion_status, run_promotion_campaign
 from .public_gateway import gateway_scan, gateway_status, initialize_gateway, release_readiness, run_public_gateway_mission
+from .public_backend import public_code_scan, public_health
 
 WEB_ROOT = Path(__file__).with_name("web")
 
@@ -83,6 +84,9 @@ def make_handler(store: Store):
                     return self._send(200, store.export_problem(parts[1]))
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "audit":
                     return self._send(200, {"events": store.list_audit_events(parts[1])})
+                # ── public namespace (internet-safe, no privileged access) ──────
+                if parts == ["public", "health"]:
+                    return self._send(200, public_health())
                 self._send(404, {"error": "route not found"})
             except KeyError as exc:
                 self._send(404, {"error": str(exc)})
@@ -150,6 +154,12 @@ def make_handler(store: Store):
                         return self._send(200, result())
                 if len(parts) == 3 and parts[0] == "problems" and parts[2] == "evaluator-session":
                     return self._send(201, evaluator_session(store, parts[1], data["node_id"]))
+                # ── public namespace ──────────────────────────────────────────
+                if parts == ["public", "code-scan"]:
+                    client_id = self.client_address[0] if hasattr(self, "client_address") else "default"
+                    return self._send(200, public_code_scan(
+                        data.get("target", ""), client_id=str(client_id)
+                    ))
                 self._send(404, {"error": "route not found"})
             except (KeyError, ValueError, json.JSONDecodeError) as exc:
                 self._send(400, {"error": str(exc)})
