@@ -1,0 +1,90 @@
+name: Sanitized workflow incident intake
+description: Voluntary research intake for interrupted or ambiguous workflow recovery.
+title: "[incident-intake] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We are studying how experienced operators recover interrupted or ambiguous workflow state. Cases where existing tooling handled the incident well are equally valuable.
+        Do not submit credentials, API keys, tokens, customer PII, private production logs, restricted source code, or confidential business information. Use aliases, redacted identifiers, relative timestamps, sanitized topology, and minimal state excerpts.
+        Stage 1 asks only whether a relevant real incident exists. Stage 2 is optional until Stage 1 is qualified. Publication or submission is not evidence of demand, value, or product interest.
+  - type: dropdown
+    id: firsthand_t2_experience
+    attributes:
+      label: Firsthand operational experience
+      options:
+        - I_HAVE_FIRSTHAND_EXPERIENCE
+        - NO_FIRSTHAND_EXPERIENCE
+    validations:
+      required: true
+  - type: input
+    id: stack_or_orchestrator
+    attributes:
+      label: Stack / orchestrator
+      description: Product or stack name only; do not include private environment identifiers.
+    validations:
+      required: true
+  - type: dropdown
+    id: incident_class
+    attributes:
+      label: Incident class
+      options:
+        - PARTIAL_WORKFLOW_EXECUTION
+        - RESUME_RETRY_REPLAY
+        - AMBIGUOUS_PERSISTED_STATE
+        - CHECKPOINT_RECOVERY
+        - DOWNSTREAM_SIDE_EFFECT
+        - OPERATOR_RECONCILIATION
+        - RECOVERY_VERIFICATION
+        - OTHER_OR_NOT_SURE
+    validations:
+      required: true
+  - type: dropdown
+    id: real_incident_exists
+    attributes:
+      label: Real incident exists
+      options:
+        - "YES"
+        - "NO"
+    validations:
+      required: true
+  - type: textarea
+    id: incident_relevance_summary
+    attributes:
+      label: Incident relevance summary
+      description: Two or three sanitized sentences about the state ambiguity; no logs or identifiers.
+    validations:
+      required: true
+  - type: dropdown
+    id: willing_to_provide_sanitized_reconstruction
+    attributes:
+      label: Sanitized reconstruction
+      options:
+        - "YES"
+        - "NO"
+    validations:
+      required: true
+  - type: checkboxes
+    id: sanitization_declaration
+    attributes:
+      label: Sanitization declaration
+      options:
+        - label: I_WILL_NOT_SHARE_RESTRICTED_DATA
+          required: true
+  - type: dropdown
+    id: public_attribution_preference
+    attributes:
+      label: Public attribution preference
+      options:
+        - PUBLIC_GITHUB_IDENTITY
+        - PSEUDONYMOUS_IN_REPORT
+    validations:
+      required: true
+  - type: textarea
+    id: stage2_packet
+    attributes:
+      label: Stage 2 incident packet (optional JSON)
+      description: Leave blank for Stage 1. After qualification, a sanitized E1/E2/E3/E4 JSON packet may be added by editing this issue.
+      render: json
+    validations:
+      required: false

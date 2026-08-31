@@ -1,0 +1,22 @@
+{
+  "experiment_id": "ZERO-INBOUND-001",
+  "evidence_type": "DERIVED",
+  "status": "FROZEN_NOT_PUBLISHED",
+  "hypothesis": "A privacy-bounded self-service agent-runtime audit can produce at least one genuine external installation attempt.",
+  "baseline": "zero externally verified installations",
+  "metric": "independently initiated external installation attempt",
+  "threshold": 1,
+  "acceptance": "one provenance-bearing installation attempt by an external party",
+  "rejection": "zero installation attempts after a future preregistered exposure window",
+  "non_signals": [
+    "internal tests",
+    "OMEGA execution",
+    "page view",
+    "email sent",
+    "delivery"
+  ],
+  "financial_authority_kwd": 0,
+  "frozen_from_cycle": "3cde81feeef922c1a5bb8affa51f9a934edc3d02ab92d1ec133003ea91a7ceb9",
+  "specification_hash": "084d9cc1f6ef7e7f97b3ba480daf16df95e15df2607d1cc5b08298eb5d8eab87",
+  "kit_sha256": "6db8974c7db7dff68cf7518c6388c9a0e05a20c1019fae2a3c7c620aaef4f419"
+}

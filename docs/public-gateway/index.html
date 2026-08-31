@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OMEGA / ZERO Public Gateway V1</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">OMEGA / ZERO PUBLIC GATEWAY V1</p>
+    <h1>Evidence-backed CODE_SCAN verdicts without exposing the private runtime.</h1>
+    <p class="lead">This static page documents the public-safe contract. It does not connect to the private OMEGA backend, Supervisor, Wake Plane, Gmail channel, or host execution controls.</p>
+
+    <section>
+      <h2>Public contract</h2>
+      <ol>
+        <li>Accept a safe fixture or syntactically valid public GitHub repository URL.</li>
+        <li>Reject local paths, metadata-service URLs, command-like input, traversal, secrets, and private runtime references.</li>
+        <li>Return a bounded verdict with evidence, confidence, uncertainty, and limitations.</li>
+        <li>Never treat a scan, view, star, fork, or owner run as demand or revenue.</li>
+      </ol>
+    </section>
+
+    <section class="cards">
+      <article><strong>VERIFIED_CLEAN</strong><span>Evidence supports no known issue in the supplied fixture.</span></article>
+      <article><strong>NEEDS_ATTENTION</strong><span>Evidence shows a bounded reliability concern.</span></article>
+      <article><strong>FAILED</strong><span>Input was invalid, unsafe, or outside the public boundary.</span></article>
+      <article><strong>UNKNOWN</strong><span>The available evidence is insufficient for a stronger claim.</span></article>
+    </section>
+
+    <section>
+      <h2>Release boundary</h2>
+      <p>Published files are limited to static public-safe documentation and contract metadata. Backend deployment is intentionally blocked until a separate safe hosting target is authorized.</p>
+    </section>
+
+    <footer>Version: Public Gateway V1 · Economic value: unchanged · Telemetry: none</footer>
+  </main>
+</body>
+</html>
