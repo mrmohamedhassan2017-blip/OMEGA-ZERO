@@ -61,3 +61,7 @@ window starts only when the public commit is independently verified.
 The owner may disable the workflow and archive or remove this publication at
 any time. Stop the experiment if private data is exposed, frozen hashes drift,
 provenance is unverifiable, or execution requires spend or unauthorized access.
+
+## Public Gateway V1
+
+A bounded static Public Gateway V1 surface is available under `docs/public-gateway/`. It documents the CODE_SCAN verdict contract and public/private boundary. The public release does not deploy the private OMEGA backend, Supervisor, Wake Plane, Gmail channel, evaluator evidence, host execution controls, credentials, or private runtime state.

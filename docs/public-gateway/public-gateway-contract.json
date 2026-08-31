@@ -1,0 +1,38 @@
+{
+  "release_id": "OMEGA-ZERO-PUBLIC-GATEWAY-V1",
+  "surface": "public-gateway-static",
+  "mission_namespace": "CODE_SCAN",
+  "public_boundary": {
+    "frontend": "static documentation and static contract UI only",
+    "backend": "not deployed",
+    "telemetry": "none",
+    "privileged_controls": "not exposed",
+    "private_runtime_state": "excluded",
+    "credentials": "excluded"
+  },
+  "allowed_inputs": [
+    "fixture:known-good",
+    "fixture:known-bad",
+    "syntactically valid public GitHub repository URL"
+  ],
+  "blocked_inputs": [
+    "local filesystem paths",
+    "metadata-service URLs",
+    "path traversal",
+    "command-like input",
+    "secrets",
+    "private runtime state"
+  ],
+  "verdicts": [
+    "VERIFIED_CLEAN",
+    "NEEDS_ATTENTION",
+    "FAILED",
+    "UNKNOWN"
+  ],
+  "evidence_rules": {
+    "scan_is_not_demand": true,
+    "view_star_fork_clone_is_not_demand": true,
+    "economic_value_unchanged": true,
+    "external_evaluator_requirement_unchanged": true
+  }
+}
