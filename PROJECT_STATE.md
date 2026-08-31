@@ -277,3 +277,5 @@ Last updated: 2026-08-31T10:29:00+03:00
 - V0.30, Cyber Expert promotion, and real economic value remain unchanged.
 
 Last updated: 2026-08-31T10:39:01+03:00
+
+- Public exposure audit remediation: live .omega/ runtime/evidence state and data/ generated local data are no longer public-tracked in the current tree. PUBLICATION_BOUNDARY.md, public-boundary.json, and 	ools/publication_guard.py define the public/private boundary. Prior pushed history still contains previously tracked .omega/data metadata and remains a separate cleanup decision; no credential-shaped secret is claimed without scan evidence.

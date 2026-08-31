@@ -4,10 +4,12 @@ __pycache__/
 .venv/
 data/*.db
 work/
+.omega/
 .omega/runtime/
 .omega/logs/
 .omega/reports/
 .omega/publication-staging/
+data/
 data/knowledge/owasp-cheatsheets/
 *oauth-client*.json
 *credentials*.json

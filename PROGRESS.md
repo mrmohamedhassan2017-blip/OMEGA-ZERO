@@ -755,3 +755,8 @@ Wake Plane now polls existing local evidence journals without reading raw email 
 - Financial actions: `0`.
 - V0.30 changed: `NO`.
 - Production routing changed: `NO`.
+
+## Public exposure audit remediation
+
+Current HEAD remediation removes live OMEGA runtime/evidence state from the public tree and adds a guard against reintroducing it. Historical public exposure remains recorded separately and requires a deliberate history-cleanup decision if removal from GitHub history is desired.
+

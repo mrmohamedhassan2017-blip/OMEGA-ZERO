@@ -808,3 +808,10 @@
 - The canonical OMEGA/ZERO repository, `.omega` runtime state, OAuth/Gmail material, evaluator evidence, backend runtime, host execution controls, private logs, and secrets were not published.
 - Frontend deployment is static files in the public repository. GitHub Pages was not enabled by this release. Backend deployment remains blocked pending a separate safe backend target and explicit authority.
 - V0.30, Cyber Expert promotion, economic state, and production routing remain unchanged.
+
+## Public exposure audit remediation
+
+- Removed .omega/ runtime/evidence state and data/ generated local data from the public tracked tree while preserving local files.
+- Added publication boundary documentation, machine-readable boundary manifest, and a deterministic staged-change guard.
+- Added regression tests for private runtime/evidence blocking and unknown-path fail-closed behavior.
+

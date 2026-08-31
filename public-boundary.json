@@ -1,0 +1,34 @@
+{
+  "boundary_id": "OMEGA_ZERO_PUBLICATION_BOUNDARY_V1",
+  "default": "UNKNOWN",
+  "allowed_classes": [
+    "PUBLIC_SOURCE",
+    "PUBLIC_DOC",
+    "PUBLIC_TEST",
+    "PUBLIC_FIXTURE",
+    "PUBLIC_GENERATED_SAFE"
+  ],
+  "denied_classes": [
+    "PRIVATE_RUNTIME",
+    "PRIVATE_EVIDENCE",
+    "PRIVATE_HOST_STATE",
+    "PRIVATE_IDENTITY",
+    "SECRET",
+    "UNKNOWN"
+  ],
+  "private_roots": [
+    ".omega/",
+    "data/"
+  ],
+  "secret_name_indicators": [
+    "oauth",
+    "credential",
+    "credentials",
+    "token",
+    "secret",
+    "refresh",
+    "private-key",
+    ".env",
+    ".dpapi"
+  ]
+}
