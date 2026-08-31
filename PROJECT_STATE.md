@@ -278,4 +278,17 @@ Last updated: 2026-08-31T10:29:00+03:00
 
 Last updated: 2026-08-31T10:39:01+03:00
 
+## Current mission update — 2026-08-31T15:22:03+03:00
+
+- Executed `PUBLIC_GATEWAY_SAFE_BACKEND_V1` as an internal safe-backend hardening and verification pass only. No external deployment, push, financial action, production routing change, Supervisor change, Wake Plane change, or V0.30/Cyber promotion mutation occurred.
+- Verified existing safe public backend endpoints: `GET /public/health` and `POST /public/code-scan`.
+- Public backend boundary remains minimal: fixture scans and bounded public GitHub repository URL scans only. No shell execution, arbitrary filesystem access, arbitrary network access, Supervisor/Wake Plane/Task Continuity mutation, private `.omega`/`data` exposure, internal evidence exposure, privileged admin controls, or credentials are exposed by the public backend.
+- Frontend Gateway form now calls the safe public backend route `POST /public/code-scan`, and startup status uses `GET /public/health`.
+- Security/resource posture verified: SSRF/private-network/redirect guard, archive traversal/symlink/absolute-path guard, static-only analysis, bounded rate/queue/concurrency limits, sanitized errors, no secret-value echoing, and temporary-source cleanup.
+- Deployment state: `SAFE_BACKEND_DEPLOYMENT_READY`. Public/live backend hosting remains `NOT_DEPLOYED` because no separate safe backend hosting target is currently authorized and verified.
+- Verification passed: targeted public backend/frontend/public gateway/API tests `146/146`; full suite `716/716` with ResourceWarning-as-error; benchmark PASS; release gates PASS; stability gates PASS; publication guard PASS; public tracked-file secret scan `0` hits.
+- Version remains `0.21.0`; V0.30 remains `WAITING_EXTERNAL_EVIDENCE`; real economic value remains `0 KWD`.
+
+Last updated: 2026-08-31T15:22:03+03:00
+
 - Public exposure audit remediation: live .omega/ runtime/evidence state and data/ generated local data are no longer public-tracked in the current tree. PUBLICATION_BOUNDARY.md, public-boundary.json, and 	ools/publication_guard.py define the public/private boundary. Prior pushed history still contains previously tracked .omega/data metadata and remains a separate cleanup decision; no credential-shaped secret is claimed without scan evidence.

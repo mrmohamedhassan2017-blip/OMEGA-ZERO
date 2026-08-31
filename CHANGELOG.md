@@ -815,3 +815,12 @@
 - Added publication boundary documentation, machine-readable boundary manifest, and a deterministic staged-change guard.
 - Added regression tests for private runtime/evidence blocking and unknown-path fail-closed behavior.
 
+# 2026-08-31 — Public Gateway Safe Backend V1
+
+- Verified the existing internet-safe backend surface for Public Gateway CODE_SCAN: `GET /public/health` and `POST /public/code-scan`.
+- Connected the Public Gateway UI to the safe backend routes instead of the older local gateway scan route.
+- Hardened tests so HTTP error responses are closed cleanly under ResourceWarning-as-error.
+- Reworked fake secret fixtures so the repository no longer contains static credential-shaped strings while still testing secret-pattern detection behavior.
+- Preserved the deployment boundary: backend is `SAFE_BACKEND_DEPLOYMENT_READY`, not publicly live. No hosting target, external write, financial action, production routing change, Supervisor/Wake Plane change, or V0.30 mutation occurred.
+- Verification passed: targeted tests `146/146`; full suite `716/716`; benchmark PASS; release PASS; stability PASS; publication guard PASS; tracked-file secret scan `0` hits.
+

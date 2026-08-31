@@ -34,6 +34,7 @@ class PublicationGuardTests(unittest.TestCase):
         self.assertAllowedAs("agent_runtime_audit/audit.py", PublicationClass.PUBLIC_SOURCE)
         self.assertAllowedAs("tests/test_public_gateway.py", PublicationClass.PUBLIC_TEST)
         self.assertAllowedAs("docs/public-gateway/index.html", PublicationClass.PUBLIC_DOC)
+        self.assertAllowedAs("omega/web/app.js", PublicationClass.PUBLIC_DOC)
         self.assertAllowedAs(".github/workflows/zero-inbound-001.yml", PublicationClass.PUBLIC_GENERATED_SAFE)
         self.assertAllowedAs("README.md", PublicationClass.PUBLIC_DOC)
 

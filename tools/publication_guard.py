@@ -91,6 +91,9 @@ def classify_path(path: str) -> tuple[PublicationClass, str]:
     if lowered.startswith(("omega/", "agent_runtime_audit/", "src/agent_runtime_audit/")) and lowered.endswith(".py"):
         return PublicationClass.PUBLIC_SOURCE, "source code"
 
+    if lowered.startswith("omega/web/") and lowered.endswith((".html", ".css", ".js", ".svg", ".json")):
+        return PublicationClass.PUBLIC_DOC, "public web UI asset"
+
     if lowered.startswith("tests/") and lowered.endswith(".py"):
         return PublicationClass.PUBLIC_TEST, "test code"
 

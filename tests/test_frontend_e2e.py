@@ -66,7 +66,10 @@ def _get(base: str, path: str) -> tuple[int, dict]:
         with urllib.request.urlopen(base + path, timeout=10) as r:
             return r.status, json.loads(r.read())
     except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read())
+        try:
+            return e.code, json.loads(e.read())
+        finally:
+            e.close()
 
 
 def _post(base: str, path: str, payload: dict, *, client_id: str | None = None) -> tuple[int, dict]:
@@ -80,7 +83,10 @@ def _post(base: str, path: str, payload: dict, *, client_id: str | None = None) 
         with urllib.request.urlopen(req, timeout=45) as r:
             return r.status, json.loads(r.read())
     except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read())
+        try:
+            return e.code, json.loads(e.read())
+        finally:
+            e.close()
 
 
 def _scan(base, target):

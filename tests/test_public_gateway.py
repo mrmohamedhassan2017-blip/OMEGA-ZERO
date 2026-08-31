@@ -14,7 +14,7 @@ from omega.public_gateway import (
     run_gateway_benchmark,
     run_public_gateway_mission,
     score_identities,
-    test_local_deployment_architecture,
+    local_deployment_architecture_check,
     validate_public_request,
     verify_security_boundaries,
 )
@@ -80,7 +80,7 @@ class PublicGatewayTests(unittest.TestCase):
             status = gateway_status(root)
             frontend = inspect_frontend_assets(root)
             api = inspect_api_exposure()
-            deployment = test_local_deployment_architecture(root)
+            deployment = local_deployment_architecture_check(root)
         self.assertEqual("PUSH_READY", readiness["state"])
         self.assertTrue(readiness["push_ready"])
         self.assertFalse(readiness["publish_authorized"])

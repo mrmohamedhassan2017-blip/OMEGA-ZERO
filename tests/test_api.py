@@ -121,7 +121,7 @@ class ApiTests(unittest.TestCase):
     def test_ui_assets_expose_editing_visual_results_and_graph_controls(self):
         for path, required in (
             ("/index.html", ("Claim inspector", "zoom-in", "Developer: Raw JSON", "ZERO CYBERSECURITY EXPERT", "PUBLIC GATEWAY")),
-            ("/app.js", ("saveNode", "deleteNode", "deleteEdge", "renderResult", "confirm(", "runCyber", "runGateway")),
+            ("/app.js", ("saveNode", "deleteNode", "deleteEdge", "renderResult", "confirm(", "runCyber", "runGateway", "/public/health", "/public/code-scan")),
             ("/styles.css", (".result-card", ".graph-viewport", ".edge-label", ".gateway-console", ".tool-card")),
         ):
             conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port)

@@ -760,3 +760,14 @@ Wake Plane now polls existing local evidence journals without reading raw email 
 
 Current HEAD remediation removes live OMEGA runtime/evidence state from the public tree and adds a guard against reintroducing it. Historical public exposure remains recorded separately and requires a deliberate history-cleanup decision if removal from GitHub history is desired.
 
+# 2026-08-31 — Public Gateway Safe Backend V1
+
+- `PUBLIC_GATEWAY_SAFE_BACKEND_V1` completed as a local engineering/verification step.
+- Public API surface verified: `GET /public/health`, `POST /public/code-scan`.
+- Frontend Gateway scan path now uses `/public/code-scan`; health/status display uses `/public/health`.
+- Verified public-safe behavior: no arbitrary filesystem, shell, Supervisor, Wake Plane, Task Continuity mutation, private evidence, `.omega`, `data`, credentials, or privileged controls are exposed by the safe backend.
+- Security/resource gates passed for SSRF, archive safety, path traversal, symlink/absolute path handling, static-only analysis, output/error sanitization, privacy cleanup, rate limiting, queue/concurrency limits, and secret-value non-echo.
+- Current state: `SAFE_BACKEND_DEPLOYMENT_READY / NOT_DEPLOYED`.
+- Tests/gates: targeted `146/146 PASS`; full suite `716/716 PASS`; ResourceWarning-as-error PASS; benchmark PASS; release PASS; stability PASS; publication guard PASS; tracked-file secret scan `0` hits.
+- Next safe action: choose or authorize a separate backend hosting target only if public live backend deployment is desired.
+
