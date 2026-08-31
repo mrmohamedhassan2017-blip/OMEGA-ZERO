@@ -22,7 +22,7 @@ OMEGA passes all 11 internal Core-candidate gates:
 10. Append-only mutation audit: events exist, remain ordered, and mutation/audit writes share a transaction.
 11. Declarative first-use: the checked-in example validates without mutating the audit database.
 
-The normal test suite independently contains 51 passing tests.
+The normal test suite independently contains 58 passing tests.
 
 ## Maturity decision
 

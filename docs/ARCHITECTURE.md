@@ -26,7 +26,7 @@ World
 
 ## Current boundary
 
-OMEGA V0.11 implements the first layer: explicit facts, assumptions, constraints, unknowns, graph semantics, and WHY / BREAK IT / PROVE IT / WHAT IF. It can record evidence and evaluate its own claims, but it does not execute actions in the world.
+OMEGA V0.21 implements the first layer end-to-end: an integrated editable local workspace, explicit facts, assumptions, constraints, unknowns, graph semantics, evidence profiles, and visual WHY / BREAK IT / PROVE IT / WHAT IF results. It can record evidence and evaluate its own claims, but it does not execute actions in the world.
 
 ## Promotion rule
 

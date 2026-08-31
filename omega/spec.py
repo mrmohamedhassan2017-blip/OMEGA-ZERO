@@ -30,7 +30,8 @@ def spec_to_bundle(spec: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("spec.analysis_target must reference a node key")
     payload = {"format": "omega.problem-bundle", "format_version": 1,
                "problem": {"title": str(problem["title"]).strip(), "description": str(problem.get("description", ""))},
-               "nodes": [{key: node[key] for key in ("key", "type", "role", "statement", "confidence", "evidence", "status")
+               "nodes": [{key: node[key] for key in ("key", "type", "role", "statement", "confidence", "evidence", "status",
+                                                          "assumptions", "uncertainty", "falsifier")
                           if key in node} for node in nodes],
                "edges": []}
     raw_edges = spec.get("edges", [])
@@ -55,4 +56,3 @@ def run_spec(store: Store, spec: dict[str, Any]) -> dict[str, Any]:
     bundle = spec_to_bundle(spec)
     imported = store.import_problem(bundle)
     return {"bundle": bundle, "imported": imported, "spec": spec}
-

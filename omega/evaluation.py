@@ -132,12 +132,16 @@ def aggregate_records(records: list[dict[str, Any]]) -> dict[str, Any]:
             raise ValueError("duplicate evaluation_id")
         seen.add(record["evaluation_id"])
     count = len(records)
+    independent = len({r["evaluator_ref"] for r in records})
     return {"format": "omega.blind-evaluation-summary", "format_version": 1,
-            "records": count, "independent_evaluator_refs": len({r["evaluator_ref"] for r in records}),
+            "records": count, "independent_evaluator_refs": independent,
             "metrics": {"top1_accuracy": sum(r["metrics"]["top1"] for r in records) / count,
                         "mean_reciprocal_rank": round(sum(r["metrics"]["reciprocal_rank"] for r in records) / count, 4),
                         "mean_pairwise_agreement": round(sum(r["metrics"]["pairwise_agreement"] for r in records) / count, 4)},
-            "note": "Evaluator references are self-declared pseudonyms, not cryptographic identity proof."}
+            "evidence_gate": {"minimum_independent_evaluators": 2,
+                              "satisfied": independent >= 2,
+                              "remaining": max(0, 2 - independent)},
+            "note": "Evaluator references are self-declared pseudonyms, not cryptographic identity proof; metrics describe ranking agreement, not proven usefulness."}
 
 
 def run_protocol_gate() -> dict[str, Any]:

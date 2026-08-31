@@ -1,0 +1,11 @@
+{
+  "evaluation_id": "replace-after-eval-prepare",
+  "evaluator_ref": "independent-pseudonym",
+  "conflict_of_interest": "Evaluator-supplied statement",
+  "onboarding_friction": [],
+  "ranking_friction": [],
+  "review_friction": [],
+  "operation_changed_next_action": null,
+  "bounded_recommendation": "Evaluator-supplied recommendation",
+  "later_decision_outcome": null
+}

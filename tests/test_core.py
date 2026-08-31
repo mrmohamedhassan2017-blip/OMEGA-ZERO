@@ -61,6 +61,29 @@ class CoreTests(unittest.TestCase):
         self.assertEqual("resolved", updated["status"])
         self.assertEqual("experiment-1", updated["evidence"][0]["source"])
 
+    def test_claim_profile_persists_and_drives_prove_it(self):
+        node = self.store.add_node(
+            self.problem["id"], "assumption", "Retention improves", 0.45,
+            assumptions=["Users return voluntarily"],
+            uncertainty="Cohort size may be too small",
+            falsifier="Four-week retention stays below 10 percent",
+        )
+        reopened = Store(self.store.path).get_node(node["id"])
+        self.assertEqual(["Users return voluntarily"], reopened["assumptions"])
+        result = Engine(Store(self.store.path).graph(self.problem["id"])).prove_it(node["id"])
+        self.assertEqual("Cohort size may be too small", result["declared_uncertainty"])
+        self.assertEqual("Four-week retention stays below 10 percent", result["fail_condition"])
+        self.assertIn("Attempt falsification", result["test_plan"][0])
+
+    def test_claim_profile_round_trips_in_portable_bundle(self):
+        node = self.store.add_node(self.problem["id"], "assumption", "Portable claim",
+                                   assumptions=["A"], uncertainty="U", falsifier="F")
+        imported = self.store.import_problem(self.store.export_problem(self.problem["id"]))
+        copied = self.store.graph(imported["problem_id"])["nodes"]
+        match = next(item for item in copied if item["statement"] == node["statement"])
+        self.assertEqual((["A"], "U", "F"),
+                         (match["assumptions"], match["uncertainty"], match["falsifier"]))
+
     def test_noop_update_does_not_pollute_audit_log(self):
         before = len(self.store.list_audit_events(self.problem["id"]))
         self.store.update_node(self.goal["id"], statement=self.goal["statement"],

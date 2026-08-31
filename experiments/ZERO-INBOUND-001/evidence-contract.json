@@ -1,0 +1,44 @@
+{
+  "experiment_id": "ZERO-INBOUND-001",
+  "contract_version": 1,
+  "classification": "REAL only after external provenance verification",
+  "threshold": 1,
+  "exposure_window_days": 30,
+  "window_starts_at": "VERIFIED_PUBLICATION_TIMESTAMP",
+  "required": [
+    "external_actor_attestation",
+    "external_actor_provenance",
+    "installation_timestamp",
+    "published_commit_sha",
+    "workflow_sha256",
+    "kit_sha256",
+    "result_sha256"
+  ],
+  "qualified_signal": "one independently initiated external installation attempt with a provenance-bearing receipt bound to the frozen publication",
+  "non_signals": [
+    "owner or OMEGA workflow run",
+    "internal test",
+    "page view",
+    "star",
+    "clone",
+    "download",
+    "email sent",
+    "delivery",
+    "workflow success without external provenance"
+  ],
+  "prohibited_collection": [
+    "raw logs",
+    "credentials",
+    "prompts",
+    "private repository content"
+  ],
+  "financial_authority_kwd": 0,
+  "telemetry": false,
+  "automated_follow_up": false,
+  "kill_conditions": [
+    "private data exposure",
+    "frozen artifact or hash drift",
+    "unverifiable external provenance",
+    "required spend or unauthorized identity"
+  ]
+}

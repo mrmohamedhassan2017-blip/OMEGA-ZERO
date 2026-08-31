@@ -1,0 +1,10 @@
+.onboarding { position: fixed; z-index: 20; inset: 0; background: #050708dd; display: grid; place-items: center; padding: 20px; }
+.onboarding > section { max-width: 680px; display: grid; gap: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 28px; box-shadow: 0 24px 80px #000; }
+.onboarding p { color: #c7d0d5; line-height: 1.55; }
+.operation-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.operation-guide span { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 10px; }
+.operation-guide b { color: var(--accent); }
+.onboarding-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.guided-form label { display: grid; gap: 5px; color: var(--text); font-size: 12px; }
+.guided-form label span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+@media (max-width: 600px) { .operation-guide { grid-template-columns: 1fr; } }

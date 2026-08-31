@@ -58,6 +58,19 @@ class EvaluationTests(unittest.TestCase):
         summary = aggregate_records(records)
         self.assertEqual(2, summary["records"]); self.assertEqual(2, summary["independent_evaluator_refs"])
         self.assertEqual(1.0, summary["metrics"]["top1_accuracy"])
+        self.assertTrue(summary["evidence_gate"]["satisfied"])
+
+    def test_aggregate_does_not_overstate_single_evaluator_evidence(self):
+        records = []
+        for _ in range(2):
+            prepared = self.prepare("same-evaluator")
+            records.append(score_reveal(prepared["public_case"], run_blind_case(prepared["public_case"]),
+                                        prepared["private_reveal"]))
+        summary = aggregate_records(records)
+        self.assertEqual(1, summary["independent_evaluator_refs"])
+        self.assertFalse(summary["evidence_gate"]["satisfied"])
+        self.assertEqual(1, summary["evidence_gate"]["remaining"])
+        self.assertIn("not proven usefulness", summary["note"])
 
     def test_protocol_gate(self):
         self.assertTrue(run_protocol_gate()["passed"])

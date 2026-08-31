@@ -76,6 +76,8 @@ class Engine:
     def prove_it(self, node_id: str) -> dict[str, Any]:
         node = self._require(node_id)
         tests = []
+        if node.get("falsifier"):
+            tests.append(f"Attempt falsification: {node['falsifier']}")
         if node["type"] == "fact":
             tests.append("Verify the source, date, scope, and reproducibility of the evidence.")
         elif node["type"] == "assumption":
@@ -88,8 +90,10 @@ class Engine:
         dependencies = [self.nodes[e["target_id"]] for e in self.outgoing[node_id] if e["type"] == "depends_on"]
         return {"operation": "PROVE_IT", "contract_version": CONTRACT_VERSION, "target": node,
                 "existing_evidence": node["evidence"], "dependencies_to_control": dependencies,
+                "declared_assumptions": node.get("assumptions", []),
+                "declared_uncertainty": node.get("uncertainty", ""),
                 "test_plan": tests, "pass_condition": "Evidence is reproducible and directly addresses the statement.",
-                "fail_condition": "The result contradicts the statement or remains non-observable."}
+                "fail_condition": node.get("falsifier") or "The result contradicts the statement or remains non-observable."}
 
     def what_if(self, node_id: str, new_value: bool) -> dict[str, Any]:
         node = self._require(node_id)

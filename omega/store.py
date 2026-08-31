@@ -53,6 +53,8 @@ class Store:
                     role TEXT,
                     statement TEXT NOT NULL, confidence REAL NOT NULL DEFAULT 0.5,
                     evidence TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'open',
+                    assumptions TEXT NOT NULL DEFAULT '[]', uncertainty TEXT NOT NULL DEFAULT '',
+                    falsifier TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
                 CREATE TABLE IF NOT EXISTS edges (
@@ -82,6 +84,13 @@ class Store:
             columns = {row[1] for row in db.execute("PRAGMA table_info(nodes)")}
             if "role" not in columns:
                 db.execute("ALTER TABLE nodes ADD COLUMN role TEXT")
+            for column, definition in (
+                ("assumptions", "TEXT NOT NULL DEFAULT '[]'"),
+                ("uncertainty", "TEXT NOT NULL DEFAULT ''"),
+                ("falsifier", "TEXT NOT NULL DEFAULT ''"),
+            ):
+                if column not in columns:
+                    db.execute(f"ALTER TABLE nodes ADD COLUMN {column} {definition}")
             if previous_version is not None and previous_version < 4:
                 db.execute("""DELETE FROM edges AS old WHERE old.type='supports' AND EXISTS (
                     SELECT 1 FROM edges AS other WHERE other.type='supports'
@@ -95,7 +104,7 @@ class Store:
                                        {"title": problem["title"], "nodes_at_enablement": node_count,
                                         "edges_at_enablement": edge_count,
                                         "note": "Audit logging starts here; earlier mutations are not reconstructed."})
-            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','6')")
+            db.execute("INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','7')")
 
     @staticmethod
     def _id(prefix: str) -> str:
@@ -161,7 +170,9 @@ class Store:
                 "edges_deleted": len(graph["edges"])}
 
     def add_node(self, problem_id: str, kind: str, statement: str, confidence: float = 0.5,
-                 evidence: list[Any] | None = None, role: str | None = None) -> dict[str, Any]:
+                 evidence: list[Any] | None = None, role: str | None = None,
+                 assumptions: list[str] | None = None, uncertainty: str = "",
+                 falsifier: str = "") -> dict[str, Any]:
         self.get_problem(problem_id)
         if kind not in NODE_TYPES:
             raise ValueError(f"type must be one of {sorted(NODE_TYPES)}")
@@ -170,8 +181,11 @@ class Store:
         role = normalize_role(kind, role)
         nid = self._id("node")
         with self.connect() as db:
-            db.execute("INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence) VALUES(?,?,?,?,?,?,?)",
-                       (nid, problem_id, kind, role, statement, confidence, json.dumps(normalize_evidence(evidence))))
+            normalized_assumptions = self._normalize_assumptions(assumptions)
+            db.execute("""INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence,
+                       assumptions,uncertainty,falsifier) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                       (nid, problem_id, kind, role, statement, confidence, json.dumps(normalize_evidence(evidence)),
+                        json.dumps(normalized_assumptions), str(uncertainty).strip(), str(falsifier).strip()))
             self._record_event(db, problem_id, "node", nid, "created",
                                {"type": kind, "role": role, "statement": statement, "confidence": confidence})
         return self.get_node(nid)
@@ -184,7 +198,16 @@ class Store:
         result = dict(row)
         result["role"] = normalize_role(result["type"], result.get("role"))
         result["evidence"] = normalize_evidence(json.loads(result["evidence"]))
+        result["assumptions"] = self._normalize_assumptions(json.loads(result.get("assumptions") or "[]"))
         return result
+
+    @staticmethod
+    def _normalize_assumptions(values: list[str] | None) -> list[str]:
+        if values is None:
+            return []
+        if not isinstance(values, list) or any(not isinstance(value, str) for value in values):
+            raise ValueError("assumptions must be a list of strings")
+        return [value.strip() for value in values if value.strip()]
 
     def delete_node(self, node_id: str) -> dict[str, Any]:
         node = self.get_node(node_id)
@@ -249,26 +272,35 @@ class Store:
                 stack.extend(adjacency.get(current, []))
         return False
 
-    def update_node(self, node_id: str, *, statement: str | None = None, confidence: float | None = None,
+    def update_node(self, node_id: str, *, kind: str | None = None, statement: str | None = None, confidence: float | None = None,
                     evidence: list[Any] | None = None, status: str | None = None,
-                    role: str | None = None) -> dict[str, Any]:
+                    role: str | None = None, assumptions: list[str] | None = None,
+                    uncertainty: str | None = None, falsifier: str | None = None) -> dict[str, Any]:
         current = self.get_node(node_id)
         if confidence is not None and not 0 <= confidence <= 1:
             raise ValueError("confidence must be between 0 and 1")
         if status is not None and status not in {"open", "testing", "supported", "falsified", "resolved"}:
             raise ValueError("invalid status")
-        selected_role = normalize_role(current["type"], role if role is not None else current["role"])
-        selected = {"role": selected_role, "statement": statement if statement is not None else current["statement"],
+        selected_type = kind if kind is not None else current["type"]
+        if selected_type not in NODE_TYPES:
+            raise ValueError(f"type must be one of {sorted(NODE_TYPES)}")
+        selected_role = normalize_role(selected_type, role if role is not None and kind is None else None)
+        selected = {"type": selected_type, "role": selected_role, "statement": statement if statement is not None else current["statement"],
                     "confidence": confidence if confidence is not None else current["confidence"],
                     "evidence": normalize_evidence(evidence) if evidence is not None else current["evidence"],
-                    "status": status if status is not None else current["status"]}
+                    "status": status if status is not None else current["status"],
+                    "assumptions": self._normalize_assumptions(assumptions) if assumptions is not None else current["assumptions"],
+                    "uncertainty": str(uncertainty).strip() if uncertainty is not None else current["uncertainty"],
+                    "falsifier": str(falsifier).strip() if falsifier is not None else current["falsifier"]}
         before = {key: current[key] for key in selected}
         if selected == before:
             return current
-        values = (selected["role"], selected["statement"], selected["confidence"],
-                  json.dumps(selected["evidence"]), selected["status"], node_id)
+        values = (selected["type"], selected["role"], selected["statement"], selected["confidence"],
+                  json.dumps(selected["evidence"]), selected["status"], json.dumps(selected["assumptions"]),
+                  selected["uncertainty"], selected["falsifier"], node_id)
         with self.connect() as db:
-            db.execute("UPDATE nodes SET role=?,statement=?,confidence=?,evidence=?,status=? WHERE id=?", values)
+            db.execute("""UPDATE nodes SET type=?,role=?,statement=?,confidence=?,evidence=?,status=?,
+                       assumptions=?,uncertainty=?,falsifier=? WHERE id=?""", values)
             self._record_event(db, current["problem_id"], "node", node_id, "updated",
                                {"before": before, "after": selected})
         return self.get_node(node_id)
@@ -321,6 +353,7 @@ class Store:
         for node in nodes:
             node["role"] = normalize_role(node["type"], node.get("role"))
             node["evidence"] = normalize_evidence(json.loads(node["evidence"]))
+            node["assumptions"] = self._normalize_assumptions(json.loads(node.get("assumptions") or "[]"))
         return {"problem": problem, "nodes": nodes, "edges": edges}
 
     @staticmethod
@@ -338,7 +371,9 @@ class Store:
             "problem": {"title": graph["problem"]["title"], "description": graph["problem"]["description"]},
             "nodes": [{"key": keys[node["id"]], "type": node["type"], "role": node["role"],
                        "statement": node["statement"], "confidence": node["confidence"],
-                       "evidence": node["evidence"], "status": node["status"]} for node in ordered_nodes],
+                       "evidence": node["evidence"], "status": node["status"],
+                       "assumptions": node["assumptions"], "uncertainty": node["uncertainty"],
+                       "falsifier": node["falsifier"]} for node in ordered_nodes],
             "edges": sorted([{"source": keys[edge["source_id"]], "target": keys[edge["target_id"]],
                               "type": edge["type"]} for edge in graph["edges"]],
                             key=lambda edge: (edge["source"], edge["target"], edge["type"])),
@@ -377,7 +412,10 @@ class Store:
             keys.add(node["key"])
             prepared.append({**node, "role": role, "confidence": confidence, "status": status,
                              "statement": str(node.get("statement", "")).strip(),
-                             "evidence": normalize_evidence(node.get("evidence"))})
+                             "evidence": normalize_evidence(node.get("evidence")),
+                             "assumptions": self._normalize_assumptions(node.get("assumptions")),
+                             "uncertainty": str(node.get("uncertainty", "")).strip(),
+                             "falsifier": str(node.get("falsifier", "")).strip()})
             if not prepared[-1]["statement"]:
                 raise ValueError("imported node statement is required")
         dependency_adjacency: dict[str, list[str]] = {}
@@ -399,9 +437,11 @@ class Store:
             db.execute("INSERT INTO problems(id,title,description) VALUES(?,?,?)",
                        (problem_id, str(problem["title"]).strip(), str(problem.get("description", ""))))
             for node in prepared:
-                db.execute("INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence,status) VALUES(?,?,?,?,?,?,?,?)",
+                db.execute("""INSERT INTO nodes(id,problem_id,type,role,statement,confidence,evidence,status,
+                           assumptions,uncertainty,falsifier) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
                            (node_ids[node["key"]], problem_id, node["type"], node["role"], node["statement"],
-                            node["confidence"], json.dumps(node["evidence"]), node["status"]))
+                            node["confidence"], json.dumps(node["evidence"]), node["status"],
+                            json.dumps(node["assumptions"]), node["uncertainty"], node["falsifier"]))
             for edge in raw_edges:
                 db.execute("INSERT INTO edges(id,problem_id,source_id,target_id,type) VALUES(?,?,?,?,?)",
                            (self._id("edge"), problem_id, node_ids[edge["source"]], node_ids[edge["target"]], edge["type"]))

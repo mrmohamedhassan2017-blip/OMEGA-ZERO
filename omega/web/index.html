@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OMEGA — Impossible Machine</title><link rel="stylesheet" href="/styles.css"></head>
+<body>
+  <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title"><section>
+    <span class="eyebrow">GUIDED FIRST RUN</span><h2 id="onboarding-title">Map the decision before debating it</h2>
+    <p><b>Facts</b> are observed; <b>Assumptions</b> are beliefs to test; <b>Constraints</b> are limits; <b>Unknowns</b> are unanswered questions.</p>
+    <p><b>Relationships</b> show what depends on, supports, contradicts, or merely relates to something else.</p>
+    <div class="operation-guide"><span><b>WHY</b> traces reasons and gaps.</span><span><b>BREAK IT</b> ranks fragile premises.</span><span><b>PROVE IT</b> creates a test plan.</span><span><b>WHAT IF</b> shows structural impact.</span></div>
+    <p>Create your own problem by naming the decision, why it is difficult, and what a useful answer enables. Then add the claims you already know and connect what depends on what.</p>
+    <div class="onboarding-actions"><button id="use-example">Start with the launch example</button><button id="create-own">Create my own problem</button></div>
+  </section></div>
+  <header><div><span class="eyebrow">IMPOSSIBLE MACHINE</span><h1>OMEGA <small>Guided Onboarding</small></h1></div><div id="health" class="status">connecting</div></header>
+  <section class="command-console" aria-label="ZERO OMEGA Command Console">
+    <div><span class="eyebrow">ZERO / OMEGA CONSOLE</span><h2>Unified command surface</h2></div>
+    <form id="console-form"><input id="console-input" placeholder="ZERO, status · CREATE MISSION improve system reliability · OMEGA execute mission-..." aria-label="Operator command"><button>Run command</button></form>
+    <div id="mission-dashboard" class="mission-dashboard"><span class="muted">Mission dashboard loading…</span></div>
+  </section>
+  <section class="gateway-console" aria-label="ZERO Cybersecurity and Public Gateway Consoles">
+    <div class="tool-card"><span class="eyebrow">ZERO CYBERSECURITY EXPERT</span><h2>Scope-first defensive console</h2><p>Classifies every cybersecurity request before execution. Unsafe or ambiguous requests fail closed.</p><form id="cyber-form"><select id="cyber-env" aria-label="Cyber environment"><option>READ_ONLY_ANALYSIS</option><option>LOCAL</option><option>SANDBOX</option><option>CTF_LAB</option><option>AUTHORIZED_TARGET</option></select><input id="cyber-input" placeholder="Analyze this suspicious script or configuration" aria-label="Cybersecurity request"><button>Classify</button></form><div id="cyber-result" class="tool-result muted">Cyber status loading…</div></div>
+    <div class="tool-card"><span class="eyebrow">PUBLIC GATEWAY</span><h2>Evidence-backed repo verdict</h2><p>Local V1 accepts safe fixtures and validates public GitHub repository URLs without publishing internals.</p><form id="gateway-form"><input id="gateway-input" placeholder="fixture:known-good · fixture:known-bad · https://github.com/owner/repo" aria-label="Gateway scan target"><button>Scan</button></form><div id="gateway-result" class="tool-result muted">Gateway status loading…</div></div>
+  </section>
+  <main>
+    <aside class="problems-panel"><div class="section-head"><h2>Problems</h2><button id="new-problem" aria-label="New problem">＋</button></div><form id="problem-form" class="stack guided-form hidden"><label><b>Decision or goal</b><span>Phrase the outcome you need to choose or understand.</span><input name="title" placeholder="Should we launch this feature?" required></label><label><b>Why this is difficult</b><span>Include the stakes, uncertainty, and what a useful answer enables.</span><textarea name="description" placeholder="We need to decide before the budget deadline, but demand and conversion are uncertain."></textarea></label><button>Create problem</button></form><div id="problem-list" class="problem-list"></div></aside>
+    <section class="workspace">
+      <div id="empty" class="empty"><strong>Select or create a problem</strong><span>Turn uncertainty into an explicit, testable graph.</span></div>
+      <div id="editor" class="hidden">
+        <div class="problem-title"><div><span class="eyebrow">ACTIVE PROBLEM</span><h2 id="active-title"></h2><p id="active-description"></p></div><div><button id="export-session">Export evaluator session</button><button id="add-node-toggle">Add node</button></div></div>
+        <form id="node-form" class="node-form hidden"><select name="type" aria-label="Claim type"><option>fact</option><option selected>assumption</option><option>constraint</option><option>unknown</option></select><input name="statement" placeholder="What do you believe must be true?" required><label>Confidence <input name="confidence" type="range" min="0" max="1" step="0.05" value="0.5"><output>0.50</output></label><input name="source" placeholder="Where could an evaluator verify this? (optional)"><input name="assumptions" placeholder="What is this claim quietly assuming? Separate with ;"><input name="uncertainty" placeholder="What remains uncertain?"><input name="falsifier" placeholder="What observation would prove this wrong?"><button>Add to graph</button></form>
+        <div class="graph-toolbar"><div class="legend"><span class="fact">Fact</span><span class="assumption">Assumption</span><span class="constraint">Constraint</span><span class="unknown">Unknown</span></div><div><button id="zoom-out" title="Zoom out">−</button><button id="fit-view">Fit</button><button id="zoom-in" title="Zoom in">＋</button></div></div>
+        <div id="graph-viewport" class="graph-viewport"><div id="graph-canvas" class="graph-canvas"><svg id="edges" aria-label="Graph relationships"></svg><div id="graph" class="graph"></div></div></div>
+        <div id="edge-panel" class="edge-panel hidden"><strong>New relationship</strong><select id="edge-target"></select><select id="edge-type"><option value="depends_on">depends on</option><option value="supports">supports</option><option value="contradicts">contradicts</option><option value="relates_to">relates to</option></select><button id="add-edge">Connect</button></div>
+        <div class="lower"><section class="inspector"><h3>Claim inspector</h3><div id="node-detail" class="muted">Choose a node in the graph.</div></section><section class="actions"><div class="action-tabs"><button data-action="why">WHY</button><button data-action="break-it">BREAK IT</button><button data-action="prove-it">PROVE IT</button><button data-action="what-if">WHAT IF</button></div><div id="result" class="result"><div class="muted">Run an action to inspect the graph.</div></div><details id="raw-panel" class="hidden"><summary>Developer: Raw JSON</summary><pre id="raw-result"></pre></details></section></div>
+      </div>
+    </section>
+  </main>
+  <link rel="stylesheet" href="/onboarding.css">
+  <script src="/app.js"></script>
+</body></html>

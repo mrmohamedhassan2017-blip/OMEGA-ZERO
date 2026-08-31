@@ -34,7 +34,7 @@ def run_stability_audit(store: Store) -> dict[str, Any]:
               "prove_it": engine.prove_it(goal["id"]), "what_if": engine.what_if(goal["id"], False)}
     boundary_present = any("WOS and Reality Compiler remain excluded" in node["statement"] for node in graph["nodes"])
     gates = [
-        {"gate": "database-integrity", "passed": health["healthy"] and health["schema_version"] == 6, "evidence": health},
+        {"gate": "database-integrity", "passed": health["healthy"] and health["schema_version"] == 7, "evidence": health},
         {"gate": "self-graph-valid", "passed": validation["valid"], "evidence": validation["summary"]},
         {"gate": "benchmarks", "passed": benchmarks["gate_passed"],
          "evidence": {"ranking": benchmarks["ranking"]["gate_passed"],

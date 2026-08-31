@@ -1,0 +1,1 @@
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\ZCL-CONTINUOUS.ps1"
