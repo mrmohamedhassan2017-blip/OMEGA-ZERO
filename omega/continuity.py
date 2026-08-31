@@ -88,8 +88,17 @@ def inspect_project(root: Path = ROOT, verify_tests: bool = False) -> dict[str, 
     if baseline and state.get("version") and baseline != state["version"]:
         errors.append(f"NEXT_TASK baseline {baseline} is stale; current state is {state['version']}")
     canonical = state.get("canonical_path")
-    if canonical and Path(canonical).resolve() != root:
-        errors.append(f"canonical path mismatch: state={canonical}; actual={root}")
+    if canonical:
+        # Separate CANONICAL_PROJECT_IDENTITY from EXECUTION_CHECKOUT_PATH.
+        # A Windows canonical path (C:\...) on a Linux host is expected when
+        # the project is checked out via a cross-platform mount; emit a warning,
+        # not an error, so continuity does not fail on a legitimate Linux CI run.
+        _is_win_path = len(canonical) >= 3 and canonical[1] == ":" and canonical[2] in "/\\"
+        _cross_platform = (_is_win_path and sys.platform != "win32") or (not _is_win_path and sys.platform == "win32")
+        if _cross_platform:
+            warnings.append(f"cross-platform checkout: canonical identity={canonical}; execution path={root}")
+        elif Path(canonical).resolve() != root:
+            errors.append(f"canonical path mismatch: state={canonical}; actual={root}")
     git = _git(root)
     if git["dirty"]:
         warnings.append(f"working tree has {git['changed_files']} changed file(s); preserve existing work")

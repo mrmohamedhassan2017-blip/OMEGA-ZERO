@@ -161,7 +161,7 @@ def inspect_frontend_assets(root: Path) -> dict[str, Any]:
     return {"state": "PASS" if passed else "FAIL", "findings": findings}
 
 
-def test_local_deployment_architecture(root: Path) -> dict[str, Any]:
+def local_deployment_architecture_check(root: Path) -> dict[str, Any]:
     required = [
         "omega/web/index.html",
         "omega/web/app.js",
@@ -192,7 +192,7 @@ def release_readiness(root: Path) -> dict[str, Any]:
     api = inspect_api_exposure()
     security = verify_security_boundaries()
     frontend = inspect_frontend_assets(root)
-    deployment = test_local_deployment_architecture(root)
+    deployment = local_deployment_architecture_check(root)
     gates = {
         "classification": "PASS" if set(classifications.values()).issubset(set(COMPONENT_CLASSES)) else "FAIL",
         "api_exposure": api["state"],
@@ -306,7 +306,7 @@ def run_public_gateway_mission(root: Path) -> dict[str, Any]:
     benchmark = run_gateway_benchmark(root)
     security = verify_security_boundaries()
     frontend = inspect_frontend_assets(root)
-    deployment = test_local_deployment_architecture(root)
+    deployment = local_deployment_architecture_check(root)
     discovery = {
         "api_architecture": "ThreadingHTTPServer API with existing OMEGA store/capability endpoints",
         "frontend_architecture": "static files under omega/web served by existing API server",

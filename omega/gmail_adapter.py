@@ -219,12 +219,18 @@ class GmailAdapter:
 
 
 def channel_status(root: Path) -> dict[str, Any]:
-    config = oauth_client_path()
-    token = gmail_config_dir() / "token.dpapi"
-    return {"channel": "gmail", "account": GMAIL_ACCOUNT, "oauth_client_configured": config.is_file(),
-            "encrypted_token_present": token.is_file(), "credential_directory": str(gmail_config_dir()),
-            "scopes": list(GMAIL_SCOPES), "outreach_sent": False,
-            "next_action": "VERIFY" if token.is_file() else ("CONSENT" if config.is_file() else "INSTALL_OAUTH_CLIENT")}
+    try:
+        config = oauth_client_path()
+        token = gmail_config_dir() / "token.dpapi"
+        return {"channel": "gmail", "account": GMAIL_ACCOUNT, "oauth_client_configured": config.is_file(),
+                "encrypted_token_present": token.is_file(), "credential_directory": str(gmail_config_dir()),
+                "scopes": list(GMAIL_SCOPES), "outreach_sent": False,
+                "next_action": "VERIFY" if token.is_file() else ("CONSENT" if config.is_file() else "INSTALL_OAUTH_CLIENT")}
+    except RuntimeError:
+        # OAuth credential directory unavailable on this platform (e.g. LOCALAPPDATA missing on Linux).
+        return {"channel": "gmail", "account": GMAIL_ACCOUNT, "oauth_client_configured": False,
+                "encrypted_token_present": False, "credential_directory": "UNAVAILABLE",
+                "scopes": list(GMAIL_SCOPES), "outreach_sent": False, "next_action": "INSTALL_OAUTH_CLIENT"}
 
 
 def verify_and_transition(root: Path, adapter: GmailAdapter) -> dict[str, Any]:

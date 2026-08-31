@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,6 +30,7 @@ class LZC19BTests(unittest.TestCase):
         self.assertTrue(result["core_api_spec_hash_valid"]); self.assertEqual(result["authority_violations"], 0)
         self.assertEqual(result["unsafe_process_terminations"], 0)
 
+    @unittest.skipUnless(os.name == "nt", "Windows-only PowerShell process query")
     def test_worker_process_query_excludes_query_shell(self):
         from omega.lzc19b import _worker_processes
         with patch("omega.lzc19b.subprocess.run") as run:

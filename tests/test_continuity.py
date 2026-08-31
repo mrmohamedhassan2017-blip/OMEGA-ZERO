@@ -51,7 +51,7 @@ class ContinuityTests(unittest.TestCase):
         for kwargs, expected in (
             ({"state_version": "0.20.0"}, "version mismatch"),
             ({"baseline": "0.20.0"}, "stale"),
-            ({"canonical": "C:\\wrong\\OMEGA"}, "canonical path mismatch"),
+            ({"canonical": "C:\\wrong\\OMEGA" if sys.platform == "win32" else "/wrong/OMEGA"}, "canonical path mismatch"),
         ):
             temp, root = self.make_repository(**kwargs)
             try:
